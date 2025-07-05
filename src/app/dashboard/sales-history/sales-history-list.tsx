@@ -15,7 +15,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ReceiptText, Trash2, Loader2, Calendar as CalendarIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -268,22 +268,29 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
                         <div className="flex items-center gap-2">
                             <p className="font-bold text-base text-primary">{formatCurrency(sale.total)}</p>
                             {userRole === 'admin' && (
-                                <Button
-                                    asChild
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                <div
+                                    role="button"
+                                    tabIndex={0}
+                                    className={cn(
+                                        buttonVariants({ variant: "ghost", size: "icon" }),
+                                        "h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                    )}
                                     onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
                                         handleDeleteRequest([sale]);
                                     }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleDeleteRequest([sale]);
+                                        }
+                                    }}
                                     aria-label="Hapus Transaksi"
                                 >
-                                    <span>
-                                      <Trash2 className="h-4 w-4" />
-                                    </span>
-                                </Button>
+                                    <Trash2 className="h-4 w-4" />
+                                </div>
                             )}
                         </div>
                       </div>
