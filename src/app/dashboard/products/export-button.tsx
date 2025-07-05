@@ -17,13 +17,12 @@ export function ExportButton({ products }: { products: Product[] }) {
     
     doc.text("Daftar Produk", 14, 16);
     
-    const tableColumn = ["Nama", "Deskripsi", "Harga Jual", "Harga Modal", "Stok"];
+    const tableColumn = ["Nama", "Harga Jual", "Harga Modal", "Stok"];
     const tableRows: (string|number)[][] = [];
 
     products.forEach(product => {
       const productData = [
         product.name,
-        product.description,
         new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price),
         new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.costPrice),
         product.stock,

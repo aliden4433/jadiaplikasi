@@ -207,17 +207,6 @@ export function ImportButton() {
                               </FormItem>
                             )}
                           />
-                           <FormField
-                            control={form.control}
-                            name={`products.${index}.description`}
-                            render={({ field }) => (
-                               <FormItem>
-                                <Label>Deskripsi</Label>
-                                <FormControl><Input {...field} value={field.value ?? ""} /></FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
                           <FormField
                             control={form.control}
                             name={`products.${index}.price`}

@@ -32,7 +32,6 @@ import type { Product } from "@/lib/types"
 
 const formSchema = z.object({
   name: z.string().min(1, "Nama produk tidak boleh kosong."),
-  description: z.string().min(1, "Deskripsi tidak boleh kosong."),
   price: z.coerce.number().min(0, "Harga harus angka positif."),
   costPrice: z.coerce.number().min(0, "Harga modal harus angka positif."),
   stock: z.coerce.number().int().min(0, "Stok harus bilangan bulat positif."),
@@ -58,7 +57,6 @@ export function ProductFormDialog({ product, children, open: openProp, onOpenCha
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      description: "",
       price: 0,
       costPrice: 0,
       stock: 0,
@@ -72,7 +70,6 @@ export function ProductFormDialog({ product, children, open: openProp, onOpenCha
       } else {
         form.reset({
           name: "",
-          description: "",
           price: 0,
           costPrice: 0,
           stock: 0,
@@ -87,7 +84,6 @@ export function ProductFormDialog({ product, children, open: openProp, onOpenCha
       let result;
       const productData = {
         name: values.name,
-        description: values.description,
         price: values.price,
         costPrice: values.costPrice,
         stock: values.stock,
@@ -138,19 +134,6 @@ export function ProductFormDialog({ product, children, open: openProp, onOpenCha
                   <FormLabel>Nama</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g., Kopi Susu" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Deskripsi</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Deskripsi singkat produk" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

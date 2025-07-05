@@ -4,7 +4,7 @@ export type Product = {
   price: number
   costPrice: number
   stock: number
-  description: string
+  description?: string
 }
 
 export type CartItem = {
