@@ -1,0 +1,9 @@
+export const Icons = {
+  logo: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <rect width="100" height="100" rx="20" fill="#4285F4"/>
+      <path d="M30 25H55C66.0457 25 75 33.9543 75 45V45C75 56.0457 66.0457 65 55 65H30V25Z" fill="white"/>
+      <path d="M55 45H30V65C30 70.5228 34.4772 75 40 75H55C66.0457 75 75 66.0457 75 55V55C75 49.4772 70.5228 45 65 45H55Z" fill="#E3F2FD"/>
+    </svg>
+  ),
+};
