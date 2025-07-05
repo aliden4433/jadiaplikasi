@@ -198,7 +198,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
           <CardHeader>
             <CardTitle>Produk</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <CardContent className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {/* Products rendered here to avoid layout shift */}
           </CardContent>
         </Card>
@@ -212,24 +212,19 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
         <CardHeader>
           <CardTitle>Produk</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <CardContent className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {products.map((product) => (
-            <Card 
-              key={product.id} 
+            <Card
+              key={product.id}
               className="flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-200"
               onClick={() => addToCart(product)}
             >
-              <CardContent className="p-2 flex-grow">
-                  <div className="aspect-square w-full bg-secondary rounded-md flex items-center justify-center">
-                  <Package className="w-1/2 h-1/2 text-muted-foreground" />
-                </div>
-              </CardContent>
-              <CardFooter className="flex flex-col items-start p-2 pt-0">
-                <p className="font-semibold text-sm">{product.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
-                </p>
-              </CardFooter>
+              <div className="p-3 flex flex-col flex-grow justify-between">
+                  <p className="font-semibold text-sm line-clamp-3">{product.name}</p>
+                  <p className="text-sm text-muted-foreground mt-2 self-end font-medium">
+                      {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
+                  </p>
+              </div>
             </Card>
           ))}
         </CardContent>
