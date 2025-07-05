@@ -1,13 +1,16 @@
 'use client';
 
 import { createContext, useState, useEffect, ReactNode } from 'react';
-import { onAuthStateChanged, signOut as firebaseSignOut, type User } from 'firebase/auth';
+import { onAuthStateChanged, signOut as firebaseSignOut, type User as FirebaseUser } from 'firebase/auth';
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { usePathname, useRouter } from 'next/navigation';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
+import type { AppUser } from '@/lib/types';
+
 
 interface AuthContextType {
-  user: User | null;
+  user: AppUser | null;
   loading: boolean;
   signOut: () => Promise<void>;
 }
@@ -18,14 +21,32 @@ const protectedRoutes = ['/dashboard'];
 const publicRoutes = ['/login', '/signup'];
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        const userRef = doc(db, "users", firebaseUser.uid);
+        const userDoc = await getDoc(userRef);
+
+        if (userDoc.exists()) {
+          setUser({ uid: firebaseUser.uid, ...userDoc.data() } as AppUser);
+        } else {
+          // If user exists in Auth but not in Firestore, create them as admin (for legacy users)
+          const newUserProfile: AppUser = {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            role: 'admin',
+          };
+          await setDoc(userRef, newUserProfile);
+          setUser(newUserProfile);
+        }
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
 
@@ -51,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await firebaseSignOut(auth);
+    setUser(null); // Clear user state immediately
     router.push('/login');
   };
 

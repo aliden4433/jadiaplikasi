@@ -20,13 +20,13 @@ import {
 import { Icons } from "@/components/icons"
 import { useAuth } from "@/hooks/use-auth"
 
-const navItems = [
+const allNavItems = [
   { href: "/dashboard", icon: ShoppingCart, label: "Penjualan" },
   { href: "/dashboard/products", icon: Package, label: "Produk" },
-  { href: "/dashboard/reports", icon: BarChart2, label: "Laporan" },
+  { href: "/dashboard/reports", icon: BarChart2, label: "Laporan", roles: ["admin"] },
   { href: "/dashboard/sales-history", icon: History, label: "Riwayat Penjualan" },
-  { href: "/dashboard/inventory", icon: BrainCircuit, label: "Inventaris AI" },
-  { href: "/dashboard/settings", icon: Settings, label: "Pengaturan" },
+  { href: "/dashboard/inventory", icon: BrainCircuit, label: "Inventaris AI", roles: ["admin"] },
+  { href: "/dashboard/settings", icon: Settings, label: "Pengaturan", roles: ["admin"] },
 ];
 
 function DashboardLayoutContent({
@@ -37,6 +37,14 @@ function DashboardLayoutContent({
   const pathname = usePathname()
   const { toggleSidebar } = useSidebar()
   const { user, signOut } = useAuth()
+
+  const navItems = allNavItems.filter(item => {
+    if (!item.roles) return true; // Accessible to all roles if not specified
+    if (!user) return false; // Hide role-specific items if user is not loaded
+    return item.roles.includes(user.role);
+  });
+
+  const currentPage = navItems.find(item => pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href)))
 
   return (
     <>
@@ -92,7 +100,7 @@ function DashboardLayoutContent({
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <SidebarTrigger className="sm:hidden" />
-          <h1 className="text-xl font-semibold">{navItems.find(item => pathname.startsWith(item.href))?.label}</h1>
+          <h1 className="text-xl font-semibold">{currentPage?.label}</h1>
         </header>
         <main className="p-4 sm:px-6 sm:py-0">{children}</main>
       </SidebarInset>

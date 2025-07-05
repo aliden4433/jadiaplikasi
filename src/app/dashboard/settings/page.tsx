@@ -30,6 +30,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useToast } from "@/hooks/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/hooks/use-auth"
+import { Badge } from "@/components/ui/badge"
 
 const discountFormSchema = z.object({
   discount: z.coerce
@@ -174,11 +175,15 @@ export default function SettingsPage() {
            <div className="space-y-4 max-w-sm">
              <div>
                 <Label>Email Pengguna</Label>
-                <p className="text-sm font-medium text-muted-foreground">{user?.email}</p>
+                <p className="text-sm font-medium text-muted-foreground">{user?.email || 'Memuat...'}</p>
              </div>
               <div>
                 <Label>Peran</Label>
-                <p className="text-sm font-medium text-muted-foreground">Admin (Default)</p>
+                {user?.role && (
+                   <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                     {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                   </Badge>
+                )}
              </div>
            </div>
         </CardContent>

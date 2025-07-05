@@ -32,3 +32,9 @@ export type Sale = {
   profit: number
   date: string
 }
+
+export type AppUser = {
+  uid: string
+  email: string | null
+  role: "admin" | "cashier"
+}
