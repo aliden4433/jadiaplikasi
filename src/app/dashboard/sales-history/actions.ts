@@ -1,3 +1,4 @@
+
 'use server';
 
 import { revalidatePath } from 'next/cache';
@@ -12,24 +13,34 @@ export async function deleteSale(sale: Sale) {
 
   try {
     await runTransaction(db, async (transaction) => {
-      // 1. Get the sale document ref
       const saleRef = doc(db, 'sales', sale.id);
 
-      // 2. For each item in the sale, update the product stock
-      for (const item of sale.items) {
-        if (!item.productId) continue;
-        const productRef = doc(db, 'products', item.productId);
-        const productDoc = await transaction.get(productRef);
+      // Create a list of items that have a valid product ID, along with their refs.
+      const validItemsWithRefs = sale.items
+        .filter(item => !!item.productId)
+        .map(item => ({
+          itemData: item,
+          ref: doc(db, 'products', item.productId!),
+        }));
+      
+      // Step 1: READ all product documents first.
+      const productDocs = await Promise.all(
+        validItemsWithRefs.map(x => transaction.get(x.ref))
+      );
+      
+      // Step 2: Now perform all WRITE operations.
+      for (let i = 0; i < productDocs.length; i++) {
+        const productDoc = productDocs[i];
+        const { itemData, ref } = validItemsWithRefs[i];
 
         if (productDoc.exists()) {
-          const currentStock = productDoc.data().stock;
-          const newStock = currentStock + item.quantity;
-          transaction.update(productRef, { stock: newStock });
+          const currentStock = productDoc.data().stock || 0;
+          const newStock = currentStock + itemData.quantity;
+          transaction.update(ref, { stock: newStock });
         }
-        // If product doesn't exist, we can't restock it. We'll just ignore it.
       }
 
-      // 3. Delete the sale document
+      // Finally, delete the sale document.
       transaction.delete(saleRef);
     });
 
