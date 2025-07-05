@@ -1,7 +1,8 @@
+
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
-import { Trash2, ShoppingCart, Loader2, Calendar as CalendarIcon } from "lucide-react"
+import { Trash2, ShoppingCart, Loader2, Calendar as CalendarIcon, ChevronDown } from "lucide-react"
 import { format } from "date-fns"
 
 import { addSale } from "./sales/actions"
@@ -25,7 +26,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetDescription,
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -33,6 +33,7 @@ import { SalesImportButton } from "./sales/sales-import-button"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { Calendar } from "@/components/ui/calendar"
+import { ProductVariantDialog } from "./sales/product-variant-dialog"
 
 interface SalesClientPageProps {
   products: Product[]
@@ -56,6 +57,7 @@ export function SalesClientPage({ products, sales }: SalesClientPageProps) {
   const [sortOrder, setSortOrder] = useState("name-asc")
   const { toast } = useToast()
   const isMobile = useIsMobile()
+  const [variantSelection, setVariantSelection] = useState<Product[] | null>(null)
 
   // Load initial discount on client side
   useEffect(() => {
@@ -97,6 +99,19 @@ export function SalesClientPage({ products, sales }: SalesClientPageProps) {
         }
       })
   }, [products, searchTerm, sortOrder, salesCount])
+  
+  const productGroups = useMemo(() => {
+    const groups: Record<string, Product[]> = {};
+    filteredAndSortedProducts.forEach(p => {
+      const nameParts = p.name.split(" - ");
+      const baseName = nameParts[0].trim();
+      if (!groups[baseName]) {
+        groups[baseName] = [];
+      }
+      groups[baseName].push(p);
+    });
+    return Object.values(groups);
+  }, [filteredAndSortedProducts]);
 
 
   const addToCart = (product: Product, quantity: number = 1, showToast = true) => {
@@ -210,7 +225,7 @@ export function SalesClientPage({ products, sales }: SalesClientPageProps) {
 
   const CartTrigger = (
     <Button
-      className="fixed bottom-8 right-8 rounded-full h-16 w-16 shadow-lg z-20"
+      className="fixed bottom-8 right-8 rounded-full h-16 w-16 shadow-lg z-20 md:hidden"
       size="icon"
     >
       <ShoppingCart className="h-7 w-7" />
@@ -237,8 +252,8 @@ export function SalesClientPage({ products, sales }: SalesClientPageProps) {
             {cart.map((item) => (
               <div key={item.product.id} className="space-y-2 border-b border-border pb-3 last:border-b-0">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-xs font-medium break-words flex-grow">{item.product.name}</p>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => removeFromCart(item.product.id!)}>
+                  <p className="text-sm font-medium break-words flex-grow pr-2">{item.product.name}</p>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0 -mt-1 -mr-2" onClick={() => removeFromCart(item.product.id!)}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
@@ -309,9 +324,9 @@ export function SalesClientPage({ products, sales }: SalesClientPageProps) {
               <p>Subtotal</p>
               <p>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(subtotal)}</p>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <p>Diskon</p>
-              <p className="font-medium">{discount}%</p>
+              <p className="font-medium text-muted-foreground">{discount}%</p>
             </div>
             {discount > 0 && (
               <div className="flex justify-between text-sm text-muted-foreground">
@@ -338,40 +353,134 @@ export function SalesClientPage({ products, sales }: SalesClientPageProps) {
     </>
   );
 
+  const CartPanel = (
+    <Card className="sticky top-6 flex flex-col max-h-[calc(100vh-3rem)]">
+        <CardHeader>
+            <CardTitle>Pesanan Saat Ini</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0 flex-grow overflow-hidden flex flex-col">
+            {CartItems}
+        </CardContent>
+        {CartSummary}
+    </Card>
+  )
+
   if (isMobile === undefined) {
     return (
-       <div className="relative min-h-[calc(100vh-8rem)]">
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                <CardTitle>Produk</CardTitle>
-                <div className="flex items-center gap-2 w-full md:w-auto">
-                    <Input placeholder="Cari produk..." className="w-full md:w-64" />
-                    <Select>
-                        <SelectTrigger className="w-full md:w-[220px]">
-                            <SelectValue placeholder="Urutkan" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="name-asc">Nama (A-Z)</SelectItem>
-                            <SelectItem value="name-desc">Nama (Z-A)</SelectItem>
-                            <SelectItem value="price-asc">Harga (Rendah ke Tinggi)</SelectItem>
-                            <SelectItem value="price-desc">Harga (Tinggi ke Rendah)</SelectItem>
-                             <SelectItem value="bestsellers">Produk Terlaris</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0 border-t">
-            {/* List rendered here to avoid layout shift */}
-          </CardContent>
-        </Card>
+       <div className="flex justify-center items-center min-h-[calc(100vh-8rem)]">
+         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     )
   }
 
+  if (isMobile) {
+    return (
+      <>
+        <div className="space-y-4">
+           <div className="flex items-center gap-2 w-full md:w-auto">
+                <SalesImportButton onImportSuccess={handleImportSuccess} products={products} />
+                <Input
+                    placeholder="Cari produk..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full md:w-64"
+                />
+            </div>
+            <Select value={sortOrder} onValueChange={setSortOrder}>
+                <SelectTrigger className="w-full">
+                <SelectValue placeholder="Urutkan" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="name-asc">Nama (A-Z)</SelectItem>
+                    <SelectItem value="name-desc">Nama (Z-A)</SelectItem>
+                    <SelectItem value="price-asc">Harga (Rendah ke Tinggi)</SelectItem>
+                    <SelectItem value="price-desc">Harga (Tinggi ke Rendah)</SelectItem>
+                    <SelectItem value="bestsellers">Produk Terlaris</SelectItem>
+                </SelectContent>
+            </Select>
+
+             <div className="divide-y divide-border rounded-md border">
+                {productGroups.length > 0 ? (
+                productGroups.map((group, index) => {
+                  const baseName = group[0].name.split(" - ")[0].trim();
+                  const hasVariants = group.length > 1;
+
+                  const handleClick = () => {
+                    if (hasVariants) {
+                      setVariantSelection(group);
+                    } else {
+                      addToCart(group[0], 1);
+                    }
+                  };
+
+                  return (
+                    <button
+                      key={`${baseName}-${index}`}
+                      onClick={handleClick}
+                      className="w-full text-left p-4 hover:bg-accent focus:outline-none focus:ring-1 focus:ring-ring focus:z-10 transition-colors first:rounded-t-md last:rounded-b-md"
+                      aria-label={`Pilih produk ${baseName}`}
+                    >
+                        <div className="flex justify-between items-start gap-4">
+                             <p className="font-medium text-sm pr-2 break-words flex-1">{baseName}</p>
+                             <div className="flex-shrink-0 text-right">
+                                {hasVariants ? (
+                                    <Badge variant="outline" className="h-6">
+                                      {group.length} Varian
+                                      <ChevronDown className="h-3 w-3 ml-1" />
+                                    </Badge>
+                                ) : (
+                                    <p className="font-semibold text-sm text-foreground">
+                                        {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(group[0].price)}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-2 flex flex-col items-start text-left">
+                           <div className="flex justify-between w-full">
+                             <span>Stok:</span>
+                             <span>{group.reduce((total, p) => total + p.stock, 0)}</span>
+                           </div>
+                           {!hasVariants && (
+                            <div className="flex justify-between w-full">
+                                <span>Harga:</span>
+                                <span>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(group[0].price)}</span>
+                            </div>
+                           )}
+                        </div>
+                    </button>
+                  );
+                })
+                ) : (
+                    <div className="flex items-center justify-center h-48 text-muted-foreground">
+                        <p>Tidak ada produk yang cocok.</p>
+                    </div>
+                )}
+            </div>
+        </div>
+
+        <Sheet>
+          <SheetTrigger asChild>{CartTrigger}</SheetTrigger>
+          <SheetContent side="bottom" className="w-full p-0 flex flex-col h-[90vh]">
+             <SheetHeader className="p-4 pb-2 border-b">
+               <SheetTitle>Pesanan Saat Ini</SheetTitle>
+             </SheetHeader>
+             {CartItems}
+             {CartSummary}
+          </SheetContent>
+        </Sheet>
+        
+        <ProductVariantDialog
+          productGroup={variantSelection}
+          open={!!variantSelection}
+          onOpenChange={() => setVariantSelection(null)}
+          onAddToCart={addToCart}
+        />
+      </>
+    )
+  }
+
   return (
-    <div className="grid md:grid-cols-[1fr_400px] gap-8 items-start">
+    <div className="grid md:grid-cols-[1fr_420px] gap-8 items-start">
       <Card className="flex flex-col h-full">
         <CardHeader>
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -401,27 +510,46 @@ export function SalesClientPage({ products, sales }: SalesClientPageProps) {
         </CardHeader>
         <CardContent className="p-0 border-t flex-grow">
           <div className="divide-y divide-border h-full max-h-[calc(100vh-14rem)] overflow-y-auto">
-            {filteredAndSortedProducts.length > 0 ? (
-              filteredAndSortedProducts.map((product) => (
-                <button
-                  key={product.id}
-                  onClick={() => addToCart(product, 1)}
-                  className="w-full text-left p-4 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-inset transition-colors"
-                  aria-label={`Tambahkan ${product.name} ke keranjang`}
-                >
-                    <div className="flex justify-between items-start">
-                        <p className="font-medium text-sm truncate pr-4">{product.name}</p>
-                        <p className="font-semibold text-sm text-foreground flex-shrink-0">
-                            {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
-                        </p>
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1 space-y-1">
-                        <p>
-                        Stok: {product.stock}
-                        </p>
-                  </div>
-                </button>
-              ))
+            {productGroups.length > 0 ? (
+              productGroups.map((group, index) => {
+                  const baseName = group[0].name.split(" - ")[0].trim();
+                  const hasVariants = group.length > 1;
+
+                  const handleClick = () => {
+                    if (hasVariants) {
+                      setVariantSelection(group);
+                    } else {
+                      addToCart(group[0], 1);
+                    }
+                  };
+
+                  return (
+                    <button
+                      key={`${baseName}-${index}`}
+                      onClick={handleClick}
+                      className="w-full text-left p-4 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-inset transition-colors"
+                      aria-label={`Pilih produk ${baseName}`}
+                    >
+                        <div className="flex justify-between items-start">
+                            <p className="font-medium text-sm truncate pr-4">{baseName}</p>
+                            <div className="flex-shrink-0">
+                                {hasVariants ? (
+                                    <Badge variant="outline">{group.length} Varian</Badge>
+                                ) : (
+                                    <p className="font-semibold text-sm text-foreground">
+                                        {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(group[0].price)}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                            <p>
+                              Stok Total: {group.reduce((total, p) => total + p.stock, 0)}
+                            </p>
+                      </div>
+                    </button>
+                  );
+                })
             ) : (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
                     <p>Tidak ada produk yang cocok dengan pencarian Anda.</p>
@@ -431,18 +559,14 @@ export function SalesClientPage({ products, sales }: SalesClientPageProps) {
         </CardContent>
       </Card>
       
-      <Card className="sticky top-6">
-        <CardHeader>
-            <CardTitle>Pesanan Saat Ini</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-            <div className="max-h-[calc(100vh-320px)] overflow-y-auto">
-                {CartItems}
-            </div>
-        </CardContent>
-        {CartSummary}
-      </Card>
+      {CartPanel}
 
+      <ProductVariantDialog
+        productGroup={variantSelection}
+        open={!!variantSelection}
+        onOpenChange={() => setVariantSelection(null)}
+        onAddToCart={addToCart}
+      />
     </div>
   )
 }
