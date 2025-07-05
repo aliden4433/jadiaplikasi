@@ -22,12 +22,31 @@ export async function processSalesPdfForReview(pdfDataUri: string): Promise<Sale
     return [];
   }
 
+  // Group products by name and sum quantities
+  const consolidatedProductsMap = new Map<string, { name: string; price: number; quantity: number }>();
+
+  for (const product of extractedResult.products) {
+    const nameKey = product.name.toLowerCase().trim();
+    if (consolidatedProductsMap.has(nameKey)) {
+        const existing = consolidatedProductsMap.get(nameKey)!;
+        existing.quantity += product.stock; // 'stock' from PDF is quantity
+    } else {
+        consolidatedProductsMap.set(nameKey, {
+            name: product.name,
+            price: product.price,
+            quantity: product.stock,
+        });
+    }
+  }
+
+  const consolidatedExtractedProducts = Array.from(consolidatedProductsMap.values());
+
   const allDbProducts = await getProducts();
   // Sort products by name length descending to match longer, more specific names first
   const sortedDbProducts = allDbProducts.sort((a, b) => b.name.length - a.name.length);
 
-  return extractedResult.products.map(extractedProduct => {
-    const extractedNameLower = extractedProduct.name.toLowerCase().trim();
+  return consolidatedExtractedProducts.map(consolidatedProduct => {
+    const extractedNameLower = consolidatedProduct.name.toLowerCase().trim();
     
     // Find the best possible match by prioritizing exact matches, then substring matches.
     const matchedProduct = 
@@ -39,9 +58,9 @@ export async function processSalesPdfForReview(pdfDataUri: string): Promise<Sale
         null;
 
     return {
-      extractedName: extractedProduct.name,
-      extractedPrice: extractedProduct.price || 0,
-      extractedQuantity: extractedProduct.stock || 1, // 'stock' from PDF is interpreted as quantity
+      extractedName: consolidatedProduct.name,
+      extractedPrice: consolidatedProduct.price || 0,
+      extractedQuantity: consolidatedProduct.quantity || 1,
       matchedProduct: matchedProduct
     };
   });
@@ -58,7 +77,6 @@ export async function addOrUpdateProductsAndGetCartItems(
             price: item.price,
             costPrice: 0, // Default cost price for new products from sales
             stock: 0,     // Default stock, will be immediately adjusted by sale
-            description: '', // Default description
         }));
 
     // Batch-create new products if any
