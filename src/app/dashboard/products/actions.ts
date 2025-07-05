@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, writeBatch } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import type { Product } from "@/lib/types"
+import { extractProducts as extractProductsFromPdfFlow, type ExtractProductsOutput } from "@/ai/flows/extract-products-from-pdf-flow"
 
 export async function getProducts(): Promise<Product[]> {
   const productsCol = collection(db, "products")
@@ -22,6 +23,16 @@ export async function addProduct(product: Omit<Product, "id">) {
   } catch (error) {
     console.error("Error adding product: ", error)
     return { success: false, message: "Gagal menambahkan produk." }
+  }
+}
+
+export async function extractProducts(pdfDataUri: string): Promise<ExtractProductsOutput> {
+  try {
+    const result = await extractProductsFromPdfFlow({ pdfDataUri });
+    return result;
+  } catch (error) {
+    console.error("Error extracting products from PDF:", error);
+    throw new Error("Gagal mengekstrak produk dari PDF. Silakan coba lagi.");
   }
 }
 
