@@ -176,19 +176,19 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
           {filteredSales.length > 0 ? (
               <Accordion type="single" collapsible className="w-full space-y-4">
                 {filteredSales.map((sale) => (
-                  <AccordionItem value={sale.id} key={sale.id} className="border-b-0 rounded-lg border overflow-hidden">
+                  <AccordionItem value={sale.id} key={sale.id} className="border-b-0 rounded-lg border overflow-hidden bg-card">
                     <AccordionTrigger className="hover:bg-accent/50 px-4 transition-colors group data-[state=open]:bg-accent/50">
                       <div className="flex justify-between items-center w-full pr-4">
                         <div className="text-left">
                           <p className="font-semibold">
-                            {format(new Date(sale.date), "d MMMM yyyy, HH:mm", { locale: id })}
+                            {format(new Date(sale.date), "d MMM yyyy, HH:mm", { locale: id })}
                           </p>
                           <p className="text-sm text-muted-foreground">
                             {sale.items.length} jenis produk
                           </p>
                         </div>
-                        <div className="flex items-center gap-4">
-                            <p className="font-bold text-lg text-primary">{formatCurrency(sale.total)}</p>
+                        <div className="flex items-center gap-2">
+                            <p className="font-bold text-base text-primary">{formatCurrency(sale.total)}</p>
                             <Button
                                 asChild
                                 variant="ghost"
