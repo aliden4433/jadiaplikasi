@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useMemo } from "react"
@@ -204,7 +205,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
             {cart.map((item) => (
               <div key={item.product.id} className="space-y-2 border-b border-border pb-3 last:border-b-0">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-medium break-words flex-grow">{item.product.name}</p>
+                  <p className="text-xs font-medium break-words flex-grow">{item.product.name}</p>
                   <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => removeFromCart(item.product.id!)}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -333,8 +334,8 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
                 </div>
             </div>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {/* Products rendered here to avoid layout shift */}
+          <CardContent className="p-0 border-t">
+            {/* List rendered here to avoid layout shift */}
           </CardContent>
         </Card>
       </div>
@@ -343,7 +344,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
 
   return (
     <div className="relative min-h-[calc(100vh-8rem)]">
-      <Card>
+      <Card className="flex flex-col h-full">
         <CardHeader>
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <CardTitle>Produk</CardTitle>
@@ -369,26 +370,33 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {filteredAndSortedProducts.map((product) => (
-            <Card
-              key={product.id}
-              className="flex flex-col transition-shadow duration-200 relative cursor-pointer hover:shadow-lg"
-              onClick={() => addToCart(product, 1)}
-            >
-              <CardContent className="p-3 flex flex-col flex-grow">
-                <p className="font-semibold text-sm line-clamp-2 flex-grow">{product.name}</p>
-                 <div className="flex justify-between items-baseline mt-2">
-                    <span className="text-xs text-muted-foreground">
+        <CardContent className="p-0 border-t flex-grow">
+          <div className="divide-y divide-border h-full max-h-[calc(100vh-14rem)] overflow-y-auto">
+            {filteredAndSortedProducts.length > 0 ? (
+              filteredAndSortedProducts.map((product) => (
+                <button
+                  key={product.id}
+                  onClick={() => addToCart(product, 1)}
+                  className="w-full text-left p-4 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-inset transition-colors flex justify-between items-center gap-4"
+                  aria-label={`Tambahkan ${product.name} ke keranjang`}
+                >
+                  <div className="flex-grow min-w-0">
+                    <p className="font-medium text-sm truncate">{product.name}</p>
+                    <p className="text-xs text-muted-foreground">
                       Stok: {product.stock}
-                    </span>
-                    <p className="text-sm text-foreground font-medium">
-                        {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
                     </p>
+                  </div>
+                  <p className="font-semibold text-sm text-foreground flex-shrink-0">
+                    {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
+                  </p>
+                </button>
+              ))
+            ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                    <p>Tidak ada produk yang cocok dengan pencarian Anda.</p>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+            )}
+          </div>
         </CardContent>
       </Card>
       
@@ -423,3 +431,5 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
     </div>
   )
 }
+
+    
