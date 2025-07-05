@@ -12,10 +12,10 @@ import {z} from 'genkit';
 
 const ProductSchema = z.object({
   name: z.string().describe('The name of the product.'),
-  description: z.string().describe('A brief description of the product.'),
-  price: z.number().describe('The selling price of the product.'),
-  costPrice: z.number().describe('The cost price of the product.'),
-  stock: z.number().int().describe('The current stock quantity of the product.'),
+  description: z.string().describe('A brief description of the product.').optional(),
+  price: z.coerce.number().describe('The selling price of the product.'),
+  costPrice: z.coerce.number().describe('The cost price of the product.'),
+  stock: z.coerce.number().int().describe('The current stock quantity of the product.'),
 });
 
 const ExtractProductsInputSchema = z.object({
