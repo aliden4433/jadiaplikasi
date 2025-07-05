@@ -45,11 +45,6 @@ export default function LoginPage() {
       )
   }
 
-  if (user) {
-    router.replace('/dashboard');
-    return null;
-  }
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
