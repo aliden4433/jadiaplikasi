@@ -23,11 +23,21 @@ export async function processSalesPdfForReview(pdfDataUri: string): Promise<Sale
   }
 
   const allDbProducts = await getProducts();
-  const productMap = new Map(allDbProducts.map(p => [p.name.toLowerCase().trim(), p]));
+  // Sort products by name length descending to match longer, more specific names first
+  const sortedDbProducts = allDbProducts.sort((a, b) => b.name.length - a.name.length);
 
   return extractedResult.products.map(extractedProduct => {
-    const nameKey = extractedProduct.name.toLowerCase().trim();
-    const matchedProduct = productMap.get(nameKey) || null;
+    const extractedNameLower = extractedProduct.name.toLowerCase().trim();
+    
+    // Find the best possible match by prioritizing exact matches, then substring matches.
+    const matchedProduct = 
+        // 1. Exact match (case-insensitive, trimmed)
+        sortedDbProducts.find(p => p.name.toLowerCase().trim() === extractedNameLower) ||
+        // 2. DB product name is found within the extracted name
+        //    (e.g., DB: "Kopi Susu", PDF: "Item Kopi Susu Spesial")
+        sortedDbProducts.find(p => extractedNameLower.includes(p.name.toLowerCase().trim())) ||
+        null;
+
     return {
       extractedName: extractedProduct.name,
       extractedPrice: extractedProduct.price || 0,
@@ -36,6 +46,7 @@ export async function processSalesPdfForReview(pdfDataUri: string): Promise<Sale
     };
   });
 }
+
 
 export async function addOrUpdateProductsAndGetCartItems(
     items: { name: string; price: number; quantity: number; id?: string }[]
