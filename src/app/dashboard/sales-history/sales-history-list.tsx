@@ -6,15 +6,15 @@ import type { Sale } from "@/lib/types";
 import { format, addDays } from "date-fns";
 import { id } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
+import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
-  AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ReceiptText, Trash2, Loader2, Calendar as CalendarIcon } from "lucide-react";
+import { ReceiptText, Trash2, Loader2, Calendar as CalendarIcon, ChevronDown } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -245,56 +245,52 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
               <Accordion type="single" collapsible className="w-full space-y-4">
                 {filteredSales.map((sale) => (
                   <AccordionItem value={sale.id} key={sale.id} className="border-b-0 rounded-lg border overflow-hidden bg-card">
-                    <AccordionTrigger className="hover:bg-accent/50 px-4 transition-colors group data-[state=open]:bg-accent/50">
-                      <div className="flex justify-between items-center w-full pr-4">
+                    <AccordionPrimitive.Header className="flex w-full items-center group transition-colors hover:bg-accent/50 data-[state=open]:bg-accent/50">
+                      {userRole === 'admin' && (
+                        <div className="pl-4">
+                          <Checkbox
+                            checked={selectedSales.includes(sale.id)}
+                            onCheckedChange={(checked) => handleSelectSale(sale.id, checked as boolean)}
+                            aria-label={`Pilih transaksi ${sale.transactionId}`}
+                          />
+                        </div>
+                      )}
+                      <AccordionPrimitive.Trigger className={cn("flex flex-1 items-center justify-between p-4 font-medium text-left", "hover:no-underline focus:outline-none")}>
                         <div className="flex items-center gap-4">
-                            {userRole === 'admin' && (
-                                <Checkbox
-                                    checked={selectedSales.includes(sale.id)}
-                                    onCheckedChange={(checked) => handleSelectSale(sale.id, checked as boolean)}
-                                    onClick={(e) => e.stopPropagation()}
-                                    aria-label={`Pilih transaksi ${sale.transactionId}`}
-                                />
-                            )}
-                            <div className="text-left">
-                            <p className="font-semibold">
-                                {sale.transactionId || 'No ID'}
-                            </p>
+                          <div className="text-left">
+                            <p className="font-semibold">{sale.transactionId || 'No ID'}</p>
                             <p className="text-sm text-muted-foreground">
-                                {format(new Date(sale.date), "d MMM yyyy, HH:mm", { locale: id })}
+                              {format(new Date(sale.date), "d MMM yyyy, HH:mm", { locale: id })}
                             </p>
-                            </div>
+                          </div>
                         </div>
                         <div className="flex items-center gap-2">
                             <p className="font-bold text-base text-primary">{formatCurrency(sale.total)}</p>
-                            {userRole === 'admin' && (
-                                <div
-                                    role="button"
-                                    tabIndex={0}
-                                    className={cn(
-                                        buttonVariants({ variant: "ghost", size: "icon" }),
-                                        "h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                                    )}
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        handleDeleteRequest([sale]);
-                                    }}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' || e.key === ' ') {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            handleDeleteRequest([sale]);
-                                        }
-                                    }}
-                                    aria-label="Hapus Transaksi"
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </div>
-                            )}
+                            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
                         </div>
-                      </div>
-                    </AccordionTrigger>
+                      </AccordionPrimitive.Trigger>
+                      {userRole === 'admin' && (
+                        <div className="pr-4">
+                            <div
+                                role="button"
+                                tabIndex={0}
+                                className={cn(
+                                    buttonVariants({ variant: "ghost", size: "icon" }),
+                                    "h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                )}
+                                onClick={() => handleDeleteRequest([sale])}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        handleDeleteRequest([sale]);
+                                    }
+                                }}
+                                aria-label="Hapus Transaksi"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </div>
+                        </div>
+                      )}
+                    </AccordionPrimitive.Header>
                     <AccordionContent className="px-4 pt-2 pb-4 bg-secondary/30 border-t">
                       <div className="space-y-3 pt-3">
                         {sale.items.map((item, index) => (
@@ -365,3 +361,5 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
     </>
   );
 }
+
+    
