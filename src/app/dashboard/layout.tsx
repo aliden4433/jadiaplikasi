@@ -2,21 +2,20 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart2, BrainCircuit, Package, ShoppingCart, UserCircle } from "lucide-react"
+import { BarChart2, BrainCircuit, Package, ShoppingCart, UserCircle, PanelLeft } from "lucide-react"
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 import {
   Sidebar,
-  SidebarHeader,
   SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
   SidebarFooter,
-  SidebarProvider,
+  SidebarHeader,
   SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { Icons } from "@/components/icons"
 
@@ -27,15 +26,16 @@ const navItems = [
   { href: "/dashboard/inventory", icon: BrainCircuit, label: "Inventaris AI" },
 ];
 
-export default function DashboardLayout({
+function DashboardLayoutContent({
   children,
 }: {
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const { toggleSidebar } = useSidebar()
 
   return (
-    <SidebarProvider>
+    <>
       <Sidebar>
         <SidebarHeader>
           <div className="flex items-center gap-2">
@@ -70,6 +70,12 @@ export default function DashboardLayout({
                 <span>Jane Doe</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <SidebarMenuItem className="hidden md:block">
+              <SidebarMenuButton onClick={toggleSidebar} tooltip="Sembunyikan">
+                <PanelLeft />
+                <span>Sembunyikan</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
@@ -80,6 +86,18 @@ export default function DashboardLayout({
         </header>
         <main className="p-4 sm:px-6 sm:py-0">{children}</main>
       </SidebarInset>
+    </>
+  )
+}
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <SidebarProvider>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
     </SidebarProvider>
   )
 }
