@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useTheme } from "next-themes"
@@ -28,15 +27,9 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useAuth } from "@/hooks/use-auth"
 
 const discountFormSchema = z.object({
   discount: z.coerce
@@ -45,14 +38,10 @@ const discountFormSchema = z.object({
     .max(100, "Diskon tidak boleh lebih dari 100."),
 })
 
-const profileFormSchema = z.object({
-  name: z.string().min(1, "Nama tidak boleh kosong."),
-  role: z.enum(["admin", "kasir"]),
-})
-
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
   const { toast } = useToast()
+  const { user } = useAuth()
   
   const [mounted, setMounted] = useState(false)
   const [defaultDiscount, setDefaultDiscount] = useState(0)
@@ -74,14 +63,6 @@ export default function SettingsPage() {
       discount: defaultDiscount,
     },
   })
-  
-  const profileForm = useForm<z.infer<typeof profileFormSchema>>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues: {
-      name: "Jane Doe",
-      role: "admin",
-    },
-  })
 
   useEffect(() => {
     discountForm.reset({ discount: defaultDiscount })
@@ -93,14 +74,6 @@ export default function SettingsPage() {
     toast({
       title: "Pengaturan Disimpan",
       description: `Diskon default telah diatur ke ${values.discount}%.`,
-    })
-  }
-  
-  function onProfileSubmit(values: z.infer<typeof profileFormSchema>) {
-    // This is a placeholder for now
-    toast({
-      title: "Fitur Belum Tersedia",
-      description: "Kemampuan untuk mengubah profil akan segera hadir.",
     })
   }
 
@@ -194,54 +167,20 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle>Profil Pengguna</CardTitle>
           <CardDescription>
-            Kelola informasi profil Anda. Pengelolaan peran akan tersedia di pembaruan mendatang.
+            Anda saat ini login sebagai pengguna berikut.
           </CardDescription>
         </CardHeader>
         <CardContent>
-           <Form {...profileForm}>
-            <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-6">
-              <div className="space-y-4">
-                 <FormField
-                  control={profileForm.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem className="max-w-sm">
-                      <FormLabel>Nama Pengguna</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nama lengkap Anda" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={profileForm.control}
-                  name="role"
-                  render={({ field }) => (
-                    <FormItem className="max-w-sm">
-                      <FormLabel>Peran</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value} disabled>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Pilih peran" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="admin">Admin</SelectItem>
-                          <SelectItem value="kasir">Kasir</SelectItem>
-                        </SelectContent>
-                      </Select>
-                       <FormDescription>
-                        Peran pengguna saat ini. Hubungi admin untuk mengubah.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <Button type="submit" disabled>Simpan Profil</Button>
-            </form>
-          </Form>
+           <div className="space-y-4 max-w-sm">
+             <div>
+                <Label>Email Pengguna</Label>
+                <p className="text-sm font-medium text-muted-foreground">{user?.email}</p>
+             </div>
+              <div>
+                <Label>Peran</Label>
+                <p className="text-sm font-medium text-muted-foreground">Admin (Default)</p>
+             </div>
+           </div>
         </CardContent>
       </Card>
     </div>

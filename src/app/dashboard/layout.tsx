@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart2, BrainCircuit, History, Package, ShoppingCart, UserCircle, PanelLeft, Settings } from "lucide-react"
+import { BarChart2, BrainCircuit, History, LogOut, Package, ShoppingCart, UserCircle, PanelLeft, Settings } from "lucide-react"
 
 import {
   Sidebar,
@@ -18,6 +18,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { Icons } from "@/components/icons"
+import { useAuth } from "@/hooks/use-auth"
 
 const navItems = [
   { href: "/dashboard", icon: ShoppingCart, label: "Penjualan" },
@@ -35,6 +36,7 @@ function DashboardLayoutContent({
 }) {
   const pathname = usePathname()
   const { toggleSidebar } = useSidebar()
+  const { user, signOut } = useAuth()
 
   return (
     <>
@@ -67,9 +69,15 @@ function DashboardLayoutContent({
         <SidebarFooter>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Akun">
+              <SidebarMenuButton tooltip={user?.email || "Akun"}>
                 <UserCircle />
-                <span>Jane Doe</span>
+                <span className="truncate">{user?.email || "Pengguna"}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={signOut} tooltip="Logout">
+                <LogOut />
+                <span>Logout</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem className="hidden md:block">
