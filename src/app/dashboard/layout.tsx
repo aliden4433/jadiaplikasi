@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart2, BrainCircuit, History, Package, ShoppingCart, UserCircle, PanelLeft } from "lucide-react"
+import { BarChart2, BrainCircuit, History, Package, ShoppingCart, UserCircle, PanelLeft, Settings } from "lucide-react"
 
 import {
   Sidebar,
@@ -25,6 +25,7 @@ const navItems = [
   { href: "/dashboard/reports", icon: BarChart2, label: "Laporan" },
   { href: "/dashboard/sales-history", icon: History, label: "Riwayat Penjualan" },
   { href: "/dashboard/inventory", icon: BrainCircuit, label: "Inventaris AI" },
+  { href: "/dashboard/settings", icon: Settings, label: "Pengaturan" },
 ];
 
 function DashboardLayoutContent({

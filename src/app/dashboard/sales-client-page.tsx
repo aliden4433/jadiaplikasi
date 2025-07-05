@@ -1,7 +1,6 @@
-
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Trash2, ShoppingCart, Loader2, Calendar as CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 
@@ -40,6 +39,14 @@ interface SalesClientPageProps {
   products: Product[]
 }
 
+const getInitialDiscount = () => {
+    if (typeof window === "undefined") {
+      return 0; // Default for SSR
+    }
+    const savedDiscount = localStorage.getItem("defaultDiscount");
+    return savedDiscount ? parseFloat(savedDiscount) : 0;
+};
+
 export function SalesClientPage({ products }: SalesClientPageProps) {
   const [cart, setCart] = useState<CartItem[]>([])
   const [discount, setDiscount] = useState(0) // Percentage
@@ -49,6 +56,11 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
   const [sortOrder, setSortOrder] = useState("name-asc")
   const { toast } = useToast()
   const isMobile = useIsMobile()
+
+  // Load initial discount on client side
+  useEffect(() => {
+    setDiscount(getInitialDiscount());
+  }, []);
 
   const filteredAndSortedProducts = useMemo(() => {
     return products
@@ -161,7 +173,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
           description: result.message,
         })
         setCart([])
-        setDiscount(0)
+        setDiscount(getInitialDiscount())
         setTransactionDate(new Date())
       } else {
         toast({
@@ -412,17 +424,22 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
                   aria-label={`Tambahkan ${product.name} ke keranjang`}
                 >
                   <p className="font-medium text-sm truncate pr-4">{product.name}</p>
-                  <div className="flex flex-col items-start mt-1 text-xs text-muted-foreground">
+                  <div className="text-xs text-muted-foreground mt-1 space-y-1 md:hidden">
                     <p>
                       Stok: {product.stock}
                     </p>
-                    <p className="font-semibold text-foreground text-sm md:hidden">
+                    <p className="font-semibold text-foreground text-sm">
                         {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
                     </p>
                   </div>
-                  <p className="font-semibold text-sm text-foreground flex-shrink-0 hidden md:block">
-                    {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
-                  </p>
+                   <div className="hidden md:flex justify-between items-center mt-1 text-xs text-muted-foreground">
+                     <p>
+                      Stok: {product.stock}
+                    </p>
+                     <p className="font-semibold text-sm text-foreground flex-shrink-0">
+                        {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
+                    </p>
+                  </div>
                 </button>
               ))
             ) : (
