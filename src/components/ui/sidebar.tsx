@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator"
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
@@ -213,6 +214,9 @@ const Sidebar = React.forwardRef<
           >
             <SheetHeader className="sr-only">
               <SheetTitle>Menu</SheetTitle>
+              <SheetDescription>
+                Navigasi utama untuk aplikasi BizFlow POS.
+              </SheetDescription>
             </SheetHeader>
             <div className="flex h-full w-full flex-col">{children}</div>
           </SheetContent>
