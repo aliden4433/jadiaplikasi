@@ -47,11 +47,11 @@ const extractProductsPrompt = ai.definePrompt({
   - Description
   - Selling Price
   - Cost Price
-  - Stock quantity
+  - Stock quantity (Note: if the PDF is a sales receipt, this field represents the quantity of items sold, not the stock level).
 
   The PDF may contain various formats, tables, or simple text lines. Your goal is to accurately parse this information. The prices might be formatted with currency symbols (like 'Rp' or '$') and thousands separators, which you should convert to a standard number format.
 
-  Ignore any text that is not part of a product listing, such as headers, footers, page numbers, or introductory text.
+  It is crucial to ignore any text that is not a product listing. This includes headers, footers, page numbers, customer details, and especially order metadata. For example, if a line contains an order number (e.g., "Nomor Pesanan"), transaction details, or similar non-product information, it must be ignored.
 
   Return the extracted data as a JSON object that strictly conforms to the provided output schema. If a product is missing a specific field, use a sensible default (e.g., 0 for price/stock, or an empty string for description).
 
