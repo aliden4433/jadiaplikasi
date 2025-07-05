@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Package, PlusCircle, Trash2, ShoppingCart } from "lucide-react"
+import { Package, Trash2, ShoppingCart } from "lucide-react"
 
 import type { CartItem, Product } from "@/lib/types"
 import { Button } from "@/components/ui/button"
@@ -12,6 +12,14 @@ import { useToast } from "@/hooks/use-toast"
 import { PaymentDialog } from "@/components/payment-dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Badge } from "@/components/ui/badge"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface SalesClientPageProps {
   products: Product[]
@@ -22,6 +30,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
   const [discount, setDiscount] = useState(0) // Percentage
   const [isPaymentDialogOpen, setPaymentDialogOpen] = useState(false)
   const { toast } = useToast()
+  const isMobile = useIsMobile()
 
   const addToCart = (product: Product) => {
     setCart((prevCart) => {
@@ -81,6 +90,122 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
     }
   }
 
+  const CartTrigger = (
+    <Button
+      className="fixed bottom-8 right-8 rounded-full h-16 w-16 shadow-lg z-20"
+      size="icon"
+    >
+      <ShoppingCart className="h-7 w-7" />
+      <span className="sr-only">Keranjang Belanja</span>
+      {totalItemsInCart > 0 && (
+        <Badge className="absolute -top-2 -right-2 h-6 w-6 flex items-center justify-center rounded-full">
+          {totalItemsInCart}
+        </Badge>
+      )}
+    </Button>
+  );
+
+  const CartItems = (
+    <div className="flex-grow overflow-y-auto">
+      <div className="p-4">
+        {cart.length === 0 ? (
+          <p className="text-muted-foreground">Tidak ada item di keranjang.</p>
+        ) : (
+          <div className="space-y-4">
+            {cart.map((item) => (
+              <div key={item.product.id} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 bg-secondary rounded-md flex items-center justify-center flex-shrink-0">
+                    <Package className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-medium">{item.product.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(item.product.price)}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    value={item.quantity}
+                    onChange={(e) => updateQuantity(item.product.id!, parseInt(e.target.value))}
+                    className="w-16 h-8 text-center"
+                    min="1"
+                  />
+                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeFromCart(item.product.id!)}>
+                    <Trash2 className="h-4 w-4" />
+                   </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const CartSummary = (
+    <>
+      {cart.length > 0 && (
+        <>
+          <Separator />
+          <div className="p-4 space-y-2">
+            <div className="flex justify-between">
+              <p>Subtotal</p>
+              <p>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(subtotal)}</p>
+            </div>
+            <div className="flex justify-between items-center">
+              <p>Diskon</p>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  value={discount}
+                  onChange={handleDiscountChange}
+                  className="w-20 h-8 text-right"
+                  min="0"
+                  max="100"
+                />
+                <span>%</span>
+              </div>
+            </div>
+            {discount > 0 && (
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <p>Potongan Diskon</p>
+                <p>-{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(discountAmount)}</p>
+              </div>
+            )}
+            <Separator />
+            <div className="flex justify-between font-bold text-lg">
+              <p>Total</p>
+              <p>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(total)}</p>
+            </div>
+          </div>
+          <CardFooter className="p-4 pt-0">
+            <Button className="w-full" onClick={() => setPaymentDialogOpen(true)} disabled={total <= 0}>
+              Proses Pembayaran
+            </Button>
+          </CardFooter>
+        </>
+      )}
+    </>
+  );
+
+  if (isMobile === undefined) {
+    return (
+       <div className="relative min-h-[calc(100vh-8rem)]">
+        <Card>
+          <CardHeader>
+            <CardTitle>Produk</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {/* Products rendered here to avoid layout shift */}
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="relative min-h-[calc(100vh-8rem)]">
       <Card>
@@ -110,103 +235,31 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
         </CardContent>
       </Card>
       
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            className="fixed bottom-8 right-8 rounded-full h-16 w-16 shadow-lg z-20"
-            size="icon"
-          >
-            <ShoppingCart className="h-7 w-7" />
-            <span className="sr-only">Keranjang Belanja</span>
-            {totalItemsInCart > 0 && (
-              <Badge className="absolute -top-2 -right-2 h-6 w-6 flex items-center justify-center rounded-full">
-                {totalItemsInCart}
-              </Badge>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-96 mr-4 mb-2" side="top" align="end">
-          <CardHeader className="p-4">
-            <CardTitle>Pesanan Saat Ini</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 max-h-96 overflow-y-auto">
-            {cart.length === 0 ? (
-              <p className="text-muted-foreground">Tidak ada item di keranjang.</p>
-            ) : (
-              <div className="space-y-4">
-                {cart.map((item) => (
-                  <div key={item.product.id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-10 h-10 bg-secondary rounded-md flex items-center justify-center flex-shrink-0">
-                        <Package className="w-6 h-6 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <p className="font-medium">{item.product.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(item.product.price)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        value={item.quantity}
-                        onChange={(e) => updateQuantity(item.product.id!, parseInt(e.target.value))}
-                        className="w-16 h-8 text-center"
-                        min="1"
-                      />
-                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeFromCart(item.product.id!)}>
-                        <Trash2 className="h-4 w-4" />
-                       </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-          {cart.length > 0 && (
-            <>
-              <Separator />
-              <CardContent className="p-4 space-y-2">
-                <div className="flex justify-between">
-                  <p>Subtotal</p>
-                  <p>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(subtotal)}</p>
-                </div>
-                <div className="flex justify-between items-center">
-                  <p>Diskon</p>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      value={discount}
-                      onChange={handleDiscountChange}
-                      className="w-20 h-8 text-right"
-                      min="0"
-                      max="100"
-                    />
-                    <span>%</span>
-                  </div>
-                </div>
-                {discount > 0 && (
-                  <div className="flex justify-between text-sm text-muted-foreground">
-                    <p>Potongan Diskon</p>
-                    <p>-{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(discountAmount)}</p>
-                  </div>
-                )}
-                <Separator />
-                <div className="flex justify-between font-bold text-lg">
-                  <p>Total</p>
-                  <p>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(total)}</p>
-                </div>
-              </CardContent>
-              <CardFooter className="p-4 pt-0">
-                <Button className="w-full" onClick={() => setPaymentDialogOpen(true)} disabled={total <= 0}>
-                  Proses Pembayaran
-                </Button>
-              </CardFooter>
-            </>
-          )}
-        </PopoverContent>
-      </Popover>
+      {isMobile ? (
+        <Sheet>
+          <SheetTrigger asChild>{CartTrigger}</SheetTrigger>
+          <SheetContent side="bottom" className="w-full rounded-t-lg p-0 flex flex-col max-h-[80vh]">
+            <SheetHeader className="p-4 pb-2">
+              <SheetTitle>Pesanan Saat Ini</SheetTitle>
+            </SheetHeader>
+            {CartItems}
+            {CartSummary}
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <Popover>
+          <PopoverTrigger asChild>{CartTrigger}</PopoverTrigger>
+          <PopoverContent className="w-96 mr-4 mb-2 p-0 flex flex-col max-h-[80vh]" side="top" align="end">
+            <CardHeader className="p-4">
+              <CardTitle>Pesanan Saat Ini</CardTitle>
+            </CardHeader>
+            <div className="flex-grow overflow-y-auto max-h-96">
+                {CartItems}
+            </div>
+            {CartSummary}
+          </PopoverContent>
+        </Popover>
+      )}
 
       <PaymentDialog
         open={isPaymentDialogOpen}
