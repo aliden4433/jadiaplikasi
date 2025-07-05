@@ -24,7 +24,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
   SheetDescription,
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -204,7 +203,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
             {cart.map((item) => (
               <div key={item.product.id} className="space-y-2 border-b border-border pb-3 last:border-b-0">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="font-medium break-words flex-grow">{item.product.name}</p>
+                  <p className="text-sm break-words flex-grow">{item.product.name}</p>
                   <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => removeFromCart(item.product.id!)}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -409,11 +408,11 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
       ) : (
         <Popover>
           <PopoverTrigger asChild>{CartTrigger}</PopoverTrigger>
-          <PopoverContent className="w-96 mr-4 mb-2 p-0 flex flex-col max-h-[80vh]" side="top" align="end">
+          <PopoverContent className="w-[480px] mr-4 mb-2 p-0 flex flex-col max-h-[80vh]" side="top" align="end">
             <CardHeader className="p-4">
               <CardTitle>Pesanan Saat Ini</CardTitle>
             </CardHeader>
-            <div className="flex-grow overflow-y-auto max-h-96">
+            <div className="flex-grow overflow-y-auto max-h-[60vh]">
                 {CartItems}
             </div>
             {CartSummary}
