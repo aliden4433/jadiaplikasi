@@ -1,12 +1,12 @@
 import { DollarSign, Package, ShoppingBag } from "lucide-react"
 
-import { sales } from "@/lib/data"
 import { getProducts } from "../products/actions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BestsellersChart } from "./charts"
-import type { SaleItem } from "@/lib/types"
+import type { Sale, SaleItem } from "@/lib/types"
+import { getSalesHistory } from "./actions"
 
-function getTodaysSalesStats() {
+function getTodaysSalesStats(sales: Sale[]) {
   const today = new Date().toISOString().split('T')[0]
   const todaysSales = sales.filter(sale => sale.date.startsWith(today))
   
@@ -16,7 +16,7 @@ function getTodaysSalesStats() {
   return { revenue, count }
 }
 
-function getBestsellers() {
+function getBestsellers(sales: Sale[]) {
   const itemCounts: { [key: string]: number } = {}
 
   sales.forEach(sale => {
@@ -37,8 +37,9 @@ function getBestsellers() {
 
 export default async function ReportsPage() {
   const products = await getProducts()
-  const { revenue: todaysRevenue, count: todaysSalesCount } = getTodaysSalesStats()
-  const bestsellers = getBestsellers()
+  const sales = await getSalesHistory()
+  const { revenue: todaysRevenue, count: todaysSalesCount } = getTodaysSalesStats(sales)
+  const bestsellers = getBestsellers(sales)
 
   return (
     <div className="space-y-8">
