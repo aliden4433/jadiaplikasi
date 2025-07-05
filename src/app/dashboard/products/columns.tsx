@@ -4,7 +4,6 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 
 import type { Product } from "@/lib/types"
-import { ProductRowActions } from "./product-row-actions"
 
 export const columns: ColumnDef<Product>[] = [
   {
@@ -62,10 +61,5 @@ export const columns: ColumnDef<Product>[] = [
   {
     accessorKey: "stock",
     header: "Stok",
-  },
-  {
-    id: "actions",
-    header: "Aksi",
-    cell: ({ row }) => <ProductRowActions product={row.original} />,
   },
 ]

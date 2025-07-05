@@ -1,12 +1,11 @@
 import { FileUp, PlusCircle } from "lucide-react"
 
 import { getProducts } from "./actions"
-import { columns } from "./columns"
-import { DataTable } from "./data-table"
 import { ProductFormDialog } from "./product-form-dialog"
 import { Button } from "@/components/ui/button"
 import { ExportButton } from "./export-button"
 import { ImportButton } from "./import-button"
+import { ProductsClientPage } from "./products-client-page"
 
 export default async function ProductsPage() {
   const products = await getProducts()
@@ -23,7 +22,7 @@ export default async function ProductsPage() {
           </Button>
         </ProductFormDialog>
       </div>
-      <DataTable columns={columns} data={products} />
+      <ProductsClientPage products={products} />
     </div>
   )
 }
