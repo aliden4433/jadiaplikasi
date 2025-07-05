@@ -2,11 +2,33 @@
 
 import { ColumnDef } from "@tanstack/react-table"
 import { ArrowUpDown } from "lucide-react"
+import * as React from "react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import type { Product } from "@/lib/types"
 import { ProductRowActions } from "./product-row-actions"
+import { ProductFormDialog } from "./product-form-dialog"
+
+const NameCell = ({ product }: { product: Product }) => {
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false)
+
+  return (
+    <>
+      <ProductFormDialog
+        product={product}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+      />
+      <button
+        onClick={() => setIsEditDialogOpen(true)}
+        className="font-medium text-left hover:underline"
+      >
+        {product.name}
+      </button>
+    </>
+  )
+}
 
 export const columns: ColumnDef<Product>[] = [
   {
@@ -43,6 +65,9 @@ export const columns: ColumnDef<Product>[] = [
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
+    },
+    cell: ({ row }) => {
+      return <NameCell product={row.original} />
     },
   },
   {

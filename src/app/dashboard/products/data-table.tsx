@@ -27,10 +27,65 @@ import type { Product } from "@/lib/types"
 import { Card, CardContent } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ProductRowActions } from "./product-row-actions"
+import { ProductFormDialog } from "./product-form-dialog"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+}
+
+const MobileCard = ({ row }: { row: any }) => {
+  const product = row.original as Product
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false)
+
+  return (
+    <>
+      <ProductFormDialog
+        product={product}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+      />
+      <Card key={row.id} data-state={row.getIsSelected() && "selected"} className="bg-card">
+        <CardContent className="p-4 flex gap-4 items-start">
+          <div>
+            <Checkbox
+              checked={row.getIsSelected()}
+              onCheckedChange={(value) => row.toggleSelected(!!value)}
+              aria-label="Select row"
+              className="mt-1"
+            />
+          </div>
+          <div className="flex-grow space-y-2 overflow-hidden">
+              <div className="flex justify-between items-start">
+                <button
+                  onClick={() => setIsEditDialogOpen(true)}
+                  className="font-semibold pr-2 break-words text-left hover:underline"
+                >
+                  {product.name}
+                </button>
+                <div className="-mt-2 -mr-2 flex-shrink-0">
+                  <ProductRowActions product={product} />
+                </div>
+              </div>
+              <div className="text-sm text-muted-foreground space-y-1">
+                 <div className="flex justify-between">
+                     <span>Harga Jual</span>
+                     <span className="font-medium text-foreground">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}</span>
+                 </div>
+                 <div className="flex justify-between">
+                     <span>Harga Modal</span>
+                     <span className="font-medium text-foreground">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.costPrice)}</span>
+                 </div>
+                  <div className="flex justify-between">
+                     <span>Stok</span>
+                     <span className="font-medium text-foreground">{product.stock}</span>
+                 </div>
+              </div>
+          </div>
+        </CardContent>
+      </Card>
+    </>
+  )
 }
 
 export function DataTable<TData, TValue>({
@@ -56,6 +111,7 @@ export function DataTable<TData, TValue>({
       columnFilters,
       rowSelection,
     },
+    enablePagination: false,
   })
 
   // Mobile card view. `isMobile` is false on first render, so this avoids hydration errors.
@@ -66,45 +122,7 @@ export function DataTable<TData, TValue>({
         <DataTableToolbar table={table} />
         <div className="space-y-4 pb-4">
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => {
-                const product = row.original as Product
-                return (
-                  <Card key={row.id} data-state={row.getIsSelected() && "selected"} className="bg-card">
-                    <CardContent className="p-4 flex gap-4 items-start">
-                      <div>
-                        <Checkbox
-                          checked={row.getIsSelected()}
-                          onCheckedChange={(value) => row.toggleSelected(!!value)}
-                          aria-label="Select row"
-                          className="mt-1"
-                        />
-                      </div>
-                      <div className="flex-grow space-y-2 overflow-hidden">
-                         <div className="flex justify-between items-start">
-                           <h3 className="font-semibold pr-2 break-words">{product.name}</h3>
-                           <div className="-mt-2 -mr-2 flex-shrink-0">
-                             <ProductRowActions product={product} />
-                           </div>
-                         </div>
-                         <div className="text-sm text-muted-foreground space-y-1">
-                            <div className="flex justify-between">
-                                <span>Harga Jual</span>
-                                <span className="font-medium text-foreground">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Harga Modal</span>
-                                <span className="font-medium text-foreground">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.costPrice)}</span>
-                            </div>
-                             <div className="flex justify-between">
-                                <span>Stok</span>
-                                <span className="font-medium text-foreground">{product.stock}</span>
-                            </div>
-                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              })
+              table.getRowModel().rows.map((row) => <MobileCard key={row.id} row={row} />)
             ) : (
               <Card>
                 <CardContent className="h-24 flex items-center justify-center text-muted-foreground">
