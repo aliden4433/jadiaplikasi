@@ -27,6 +27,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { SalesImportButton } from "./sales/sales-import-button"
 
 interface SalesClientPageProps {
   products: Product[]
@@ -63,7 +64,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
   }, [products, searchTerm, sortOrder])
 
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product, showToast = true) => {
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.product.id === product.id)
       if (existingItem) {
@@ -75,9 +76,21 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
       }
       return [...prevCart, { product, quantity: 1 }]
     })
+    if (showToast) {
+      toast({
+        title: "Produk Ditambahkan",
+        description: `${product.name} telah ditambahkan ke keranjang.`,
+      })
+    }
+  }
+
+  const handleImportSuccess = (productsFromPdf: Product[]) => {
+    productsFromPdf.forEach(product => {
+        addToCart(product, false); // Add to cart without showing toast for each item
+    });
     toast({
-      title: "Produk Ditambahkan",
-      description: `${product.name} telah ditambahkan ke keranjang.`,
+        title: "Impor Selesai",
+        description: `${productsFromPdf.length} item produk dari PDF telah ditambahkan ke keranjang.`
     })
   }
 
@@ -260,6 +273,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <CardTitle>Produk</CardTitle>
             <div className="flex items-center gap-2 w-full md:w-auto">
+                <SalesImportButton onImportSuccess={handleImportSuccess} />
                 <Input
                     placeholder="Cari produk..."
                     value={searchTerm}
