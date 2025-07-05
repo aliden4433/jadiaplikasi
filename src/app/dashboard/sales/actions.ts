@@ -98,12 +98,18 @@ export async function addSale(saleData: {
     const total = subtotal - discountAmount;
 
     await runTransaction(db, async (transaction) => {
-      const salesCol = collection(db, "sales")
-      const saleRef = doc(salesCol)
+      // Step 1: READ all product documents first.
+      const productRefs = validItems.map(item => doc(db, "products", item.product.id!));
+      const productDocs = await Promise.all(productRefs.map(ref => transaction.get(ref)));
+
+      // Step 2: Now perform all WRITE operations.
+      // First, create the sale document.
+      const salesCol = collection(db, "sales");
+      const saleRef = doc(salesCol);
       
       const saleToSave = {
         items: validItems.map(item => ({
-          productId: item.product.id!, // Safe due to the filter above
+          productId: item.product.id!,
           productName: item.product.name,
           quantity: item.quantity,
           price: item.price,
@@ -112,23 +118,25 @@ export async function addSale(saleData: {
         discount: discountAmount,
         total,
         date: new Date().toISOString(),
-      }
-      transaction.set(saleRef, saleToSave)
+      };
+      transaction.set(saleRef, saleToSave);
 
-      for (const item of validItems) {
-        const productRef = doc(db, "products", item.product.id!)
-        const productDoc = await transaction.get(productRef)
+      // Next, update the stock for each product.
+      for (let i = 0; i < validItems.length; i++) {
+        const item = validItems[i];
+        const productDoc = productDocs[i];
+        const productRef = productRefs[i];
 
         if (!productDoc.exists()) {
-          throw new Error(`Produk "${item.product.name}" tidak ditemukan.`)
+          throw new Error(`Produk "${item.product.name}" tidak ditemukan.`);
         }
 
-        const currentStock = productDoc.data().stock
-        const newStock = currentStock - item.quantity
+        const currentStock = productDoc.data().stock;
+        const newStock = currentStock - item.quantity;
 
-        transaction.update(productRef, { stock: newStock })
+        transaction.update(productRef, { stock: newStock });
       }
-    })
+    });
     
     revalidatePath("/dashboard/products")
     revalidatePath("/dashboard")
