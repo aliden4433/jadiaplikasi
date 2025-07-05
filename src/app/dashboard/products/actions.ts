@@ -78,3 +78,36 @@ export async function deleteProduct(id: string) {
     return { success: false, message: "Gagal menghapus produk." }
   }
 }
+
+export async function deleteProducts(ids: string[]) {
+  try {
+    const batch = writeBatch(db);
+    ids.forEach(id => {
+      const productRef = doc(db, "products", id);
+      batch.delete(productRef);
+    });
+    await batch.commit();
+    revalidatePath("/dashboard/products");
+    return { success: true, message: `${ids.length} produk berhasil dihapus.` };
+  } catch (error) {
+    console.error("Error deleting products: ", error);
+    return { success: false, message: "Gagal menghapus produk." };
+  }
+}
+
+
+export async function updateProductsBatch(ids: string[], data: Partial<Omit<Product, "id">>) {
+  try {
+    const batch = writeBatch(db);
+    ids.forEach(id => {
+      const productRef = doc(db, "products", id);
+      batch.update(productRef, data);
+    });
+    await batch.commit();
+    revalidatePath("/dashboard/products");
+    return { success: true, message: `${ids.length} produk berhasil diperbarui.` };
+  } catch (error) {
+    console.error("Error updating products: ", error);
+    return { success: false, message: "Gagal memperbarui produk." };
+  }
+}
