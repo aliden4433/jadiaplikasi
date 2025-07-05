@@ -377,18 +377,23 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
                 <button
                   key={product.id}
                   onClick={() => addToCart(product, 1)}
-                  className="w-full text-left p-4 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-inset transition-colors flex justify-between items-center gap-4"
+                  className="w-full text-left p-4 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-inset transition-colors"
                   aria-label={`Tambahkan ${product.name} ke keranjang`}
                 >
-                  <div className="flex-grow min-w-0">
-                    <p className="font-medium text-sm truncate">{product.name}</p>
+                  <div className="flex justify-between items-start">
+                    <p className="font-medium text-sm truncate pr-4">{product.name}</p>
+                    <p className="font-semibold text-sm text-foreground flex-shrink-0 hidden md:block">
+                      {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
+                    </p>
+                  </div>
+                  <div className="flex justify-between items-baseline mt-1">
                     <p className="text-xs text-muted-foreground">
                       Stok: {product.stock}
                     </p>
+                    <p className="font-semibold text-sm text-foreground flex-shrink-0 block md:hidden">
+                      {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
+                    </p>
                   </div>
-                  <p className="font-semibold text-sm text-foreground flex-shrink-0">
-                    {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
-                  </p>
                 </button>
               ))
             ) : (
