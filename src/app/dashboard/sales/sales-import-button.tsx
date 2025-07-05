@@ -1,7 +1,10 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { FileUp, Loader2, Wand2 } from "lucide-react"
+import { useForm, useFieldArray } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { FileUp, Loader2, Wand2, Trash2, ArrowLeft, CheckCircle2, AlertTriangle } from "lucide-react"
 
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
@@ -17,32 +20,62 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { processSalesPdf } from "./actions"
-import type { Product } from "@/lib/types"
+import { processSalesPdfForReview, addOrUpdateProductsAndGetCartItems } from "./actions"
+import type { CartItem, Product } from "@/lib/types"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
+import { Badge } from "@/components/ui/badge"
 
 interface SalesImportButtonProps {
-  onImportSuccess: (products: Product[]) => void
+  onImportSuccess: (items: CartItem[]) => void
 }
+
+type ImportStep = "upload" | "review" | "loading"
+
+const reviewItemSchema = z.object({
+  name: z.string().min(1, "Nama tidak boleh kosong"),
+  price: z.coerce.number().min(0, "Harga harus positif"),
+  quantity: z.coerce.number().int().min(1, "Jumlah minimal 1"),
+  id: z.string().optional(),
+  matchedProduct: z.custom<Product | null>().optional(),
+});
+
+const formSchema = z.object({
+  items: z.array(reviewItemSchema),
+})
 
 export function SalesImportButton({ onImportSuccess }: SalesImportButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [step, setStep] = useState<ImportStep>("upload")
   const [file, setFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      items: [],
+    },
+  })
+
+  const { fields, remove, replace } = useFieldArray({
+    control: form.control,
+    name: "items",
+  })
   
   useEffect(() => {
     if (!isOpen) {
-      // Reset state on close
       setTimeout(() => {
-        setIsLoading(false)
+        setStep("upload")
         setFile(null)
+        replace([])
         if (fileInputRef.current) {
           fileInputRef.current.value = ""
         }
+        form.reset()
       }, 200)
     }
-  }, [isOpen])
+  }, [isOpen, replace, form])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -55,22 +88,28 @@ export function SalesImportButton({ onImportSuccess }: SalesImportButtonProps) {
       toast({ variant: "destructive", title: "Error", description: "Silakan pilih file PDF terlebih dahulu." })
       return
     }
-
-    setIsLoading(true)
-
+    setStep("loading")
     try {
       const reader = new FileReader()
       reader.readAsDataURL(file)
       reader.onload = async () => {
         try {
           const pdfDataUri = reader.result as string
-          const result = await processSalesPdf(pdfDataUri)
+          const reviewData = await processSalesPdfForReview(pdfDataUri)
 
-          if (result.productsForCart && result.productsForCart.length > 0) {
-            onImportSuccess(result.productsForCart)
-            setIsOpen(false)
+          if (reviewData.length > 0) {
+            const formValues = reviewData.map(item => ({
+                name: item.extractedName,
+                price: item.matchedProduct?.price ?? item.extractedPrice,
+                quantity: item.extractedQuantity,
+                id: item.matchedProduct?.id,
+                matchedProduct: item.matchedProduct,
+            }));
+            replace(formValues);
+            setStep("review");
           } else {
             toast({ variant: "destructive", title: "Tidak Ada Produk Ditemukan", description: "AI tidak dapat menemukan produk apa pun di PDF." })
+            setStep("upload")
           }
         } catch (e) {
             toast({
@@ -78,12 +117,11 @@ export function SalesImportButton({ onImportSuccess }: SalesImportButtonProps) {
                 title: "Error Ekstraksi AI",
                 description: e instanceof Error ? e.message : "Terjadi kesalahan saat memproses PDF.",
             })
-        } finally {
-            setIsLoading(false)
+            setStep("upload")
         }
       }
       reader.onerror = (error) => {
-        setIsLoading(false)
+        setStep("upload")
         console.error("File reading error:", error)
         throw new Error("Gagal membaca file.")
       }
@@ -93,9 +131,32 @@ export function SalesImportButton({ onImportSuccess }: SalesImportButtonProps) {
         title: "Error",
         description: error instanceof Error ? error.message : "Terjadi kesalahan yang tidak diketahui.",
       })
-      setIsLoading(false)
+      setStep("upload")
     }
   }
+
+  const onFinalImport = async (data: z.infer<typeof formSchema>) => {
+    setStep("loading")
+    try {
+      const result = await addOrUpdateProductsAndGetCartItems(data.items)
+      if (result.length > 0) {
+        onImportSuccess(result);
+        toast({ title: "Sukses", description: `${result.length} item berhasil ditambahkan ke keranjang.` })
+        setIsOpen(false)
+      } else {
+        throw new Error("Tidak ada produk valid untuk diimpor.")
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error Impor",
+        description: error instanceof Error ? error.message : "Gagal memproses item.",
+      })
+      setStep("review")
+    }
+  }
+
+  const isLoading = step === "loading"
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -105,32 +166,126 @@ export function SalesImportButton({ onImportSuccess }: SalesImportButtonProps) {
           Impor ke Keranjang
         </Button>
       </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Impor Penjualan dari PDF</DialogTitle>
-          <DialogDescription>
-            Pilih file PDF yang berisi daftar produk untuk ditambahkan ke keranjang. Produk yang belum ada akan dibuat secara otomatis.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid w-full max-w-sm items-center gap-1.5">
-            <Label htmlFor="pdf-file-sales">File PDF</Label>
-            <Input id="pdf-file-sales" type="file" accept=".pdf" onChange={handleFileChange} ref={fileInputRef} />
-          </div>
-        </div>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline" disabled={isLoading}>Batal</Button>
-          </DialogClose>
-          <Button onClick={handlePdfExtraction} disabled={isLoading || !file}>
-            {isLoading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Wand2 className="mr-2 h-4 w-4" />
+      <DialogContent className="max-w-3xl">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onFinalImport)}>
+            {step === "upload" && (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Impor Penjualan dari PDF</DialogTitle>
+                  <DialogDescription>
+                    Pilih file PDF yang berisi daftar produk untuk ditambahkan ke keranjang. Anda akan dapat meninjaunya sebelum impor.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid w-full max-w-sm items-center gap-1.5">
+                    <Label htmlFor="pdf-file-sales">File PDF</Label>
+                    <Input id="pdf-file-sales" type="file" accept=".pdf" onChange={handleFileChange} ref={fileInputRef} />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="outline" disabled={isLoading}>Batal</Button>
+                  </DialogClose>
+                  <Button onClick={handlePdfExtraction} disabled={isLoading || !file}>
+                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                    Proses dengan AI
+                  </Button>
+                </DialogFooter>
+              </>
             )}
-            Proses & Tambah
-          </Button>
-        </DialogFooter>
+
+            {step === "review" && (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Tinjau Item Hasil Ekstraksi</DialogTitle>
+                  <DialogDescription>
+                    Berikut adalah item yang diekstraksi oleh AI. Tinjau, edit, atau hapus sebelum menambahkannya ke keranjang.
+                  </DialogDescription>
+                </DialogHeader>
+                <ScrollArea className="h-[50vh] pr-6">
+                  <div className="space-y-6 py-4">
+                    {fields.map((field, index) => (
+                      <div key={field.id} className="p-4 border rounded-lg relative bg-background">
+                        <div className="flex items-center gap-3 mb-4">
+                            {field.id ? <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" /> : <AlertTriangle className="h-5 w-5 text-yellow-500 flex-shrink-0" />}
+                            <div className="flex-grow">
+                                <h4 className="font-semibold">{field.name}</h4>
+                                <p className="text-xs text-muted-foreground">
+                                    {field.id ? `Cocok dengan produk yang ada.` : `Akan dibuat sebagai produk baru.`}
+                                </p>
+                            </div>
+                            {field.id ? <Badge variant="secondary">Cocok</Badge> : <Badge variant="outline">Baru</Badge>}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <FormField
+                            control={form.control}
+                            name={`items.${index}.name`}
+                            render={({ field }) => (
+                              <FormItem className="md:col-span-3">
+                                <Label>Nama Produk</Label>
+                                <FormControl><Input {...field} /></FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`items.${index}.quantity`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <Label>Jumlah</Label>
+                                <FormControl><Input type="number" {...field} /></FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`items.${index}.price`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <Label>Harga Jual Satuan</Label>
+                                <FormControl><Input type="number" {...field} /></FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                         <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute top-2 right-2 text-muted-foreground hover:text-destructive"
+                          onClick={() => remove(index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setStep("upload")} disabled={isLoading}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Kembali
+                  </Button>
+                  <Button type="submit" disabled={isLoading || fields.length === 0}>
+                    {isLoading ? "Menambahkan..." : `Tambah ${fields.length} Item ke Keranjang`}
+                  </Button>
+                </DialogFooter>
+              </>
+            )}
+            
+            {step === "loading" && (
+                <div className="flex flex-col items-center justify-center h-64 gap-4">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                    <p className="text-muted-foreground">AI sedang bekerja... Mohon tunggu sebentar.</p>
+                </div>
+            )}
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   )

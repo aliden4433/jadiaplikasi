@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Package, Trash2, ShoppingCart, Loader2 } from "lucide-react"
+import { Trash2, ShoppingCart, Loader2 } from "lucide-react"
 
 import { addSale } from "./sales/actions"
 import type { CartItem, Product } from "@/lib/types"
@@ -22,10 +22,11 @@ import {
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetClose,
+  SheetDescription,
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { SalesImportButton } from "./sales/sales-import-button"
@@ -68,17 +69,17 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
   }, [products, searchTerm, sortOrder])
 
 
-  const addToCart = (product: Product, showToast = true) => {
+  const addToCart = (product: Product, quantity: number = 1, showToast = true) => {
     setCart((prevCart) => {
       const itemInCart = prevCart.find((item) => item.product.id === product.id)
       if (itemInCart) {
         return prevCart.map((item) =>
           item.product.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + quantity }
             : item
         )
       }
-      return [...prevCart, { product, quantity: 1, price: product.price }]
+      return [...prevCart, { product, quantity, price: product.price }]
     })
 
     if (showToast) {
@@ -89,13 +90,13 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
     }
   }
 
-  const handleImportSuccess = (productsFromPdf: Product[]) => {
-    productsFromPdf.forEach(product => {
-        addToCart(product, false); // Add to cart without showing toast for each item
+  const handleImportSuccess = (itemsFromPdf: CartItem[]) => {
+    itemsFromPdf.forEach(item => {
+        addToCart(item.product, item.quantity, false);
     });
     toast({
         title: "Impor Selesai",
-        description: `${productsFromPdf.length} item produk dari PDF telah ditambahkan ke keranjang.`
+        description: `${itemsFromPdf.length} item produk dari PDF telah ditambahkan ke keranjang.`
     })
   }
 
@@ -306,12 +307,12 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
             </div>
           </div>
           <CardFooter className="p-4 pt-0">
-            <Button className="w-full" onClick={handleProcessSale} disabled={isProcessing}>
-              {isProcessing ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
-              {isProcessing ? "Memproses..." : "Catat Transaksi"}
-            </Button>
+             <Button className="w-full" onClick={handleProcessSale} disabled={isProcessing}>
+                {isProcessing ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                {isProcessing ? "Memproses..." : `Catat Transaksi (${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(total)})`}
+              </Button>
           </CardFooter>
         </>
       )}
@@ -382,17 +383,27 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
             <Card
               key={product.id}
               className="flex flex-col transition-shadow duration-200 relative cursor-pointer hover:shadow-lg"
-              onClick={() => addToCart(product)}
+              onClick={() => addToCart(product, 1)}
             >
-              <CardContent className="p-3 flex flex-col flex-grow justify-between">
-                <p className="font-semibold text-sm line-clamp-3 pr-4">{product.name}</p>
-                <div className="flex justify-between items-baseline mt-2">
-                  <span className="text-xs text-muted-foreground">Stok: {product.stock}</span>
-                  <p className="text-sm text-foreground font-medium">
-                    {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
-                  </p>
+              <CardContent className="p-3 flex flex-col flex-grow">
+                <p className="font-semibold text-sm line-clamp-2 flex-grow">{product.name}</p>
+                 <div className="flex justify-between items-baseline mt-2">
+                    <span className={cn(
+                      "text-xs",
+                      product.stock > 0 ? "text-muted-foreground" : "text-destructive font-medium"
+                    )}>
+                      Stok: {product.stock}
+                    </span>
+                    <p className="text-sm text-foreground font-medium">
+                        {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
+                    </p>
                 </div>
               </CardContent>
+              {product.stock <= 0 && (
+                 <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                    <Badge variant="destructive">Habis</Badge>
+                </div>
+              )}
             </Card>
           ))}
         </CardContent>
@@ -401,7 +412,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
       {isMobile ? (
         <Sheet>
           <SheetTrigger asChild>{CartTrigger}</SheetTrigger>
-          <SheetContent side="bottom" className="w-full p-0 flex flex-col h-screen">
+          <SheetContent side="bottom" className="w-full p-0 flex flex-col h-screen max-h-screen">
             <SheetHeader className="p-4 pb-2">
               <SheetTitle>Pesanan Saat Ini</SheetTitle>
               <SheetDescription className="sr-only">

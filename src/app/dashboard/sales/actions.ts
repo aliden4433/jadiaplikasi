@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { collection, doc, runTransaction } from 'firebase/firestore';
+import { collection, doc, runTransaction, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Product, CartItem } from '@/lib/types';
 import {
@@ -9,74 +9,74 @@ import {
 } from '@/ai/flows/extract-products-from-pdf-flow';
 import { getProducts, addProductsBatch } from '../products/actions';
 
-type ProcessedPdfResult = {
-    productsForCart: Product[];
-    newProductsCount: number;
-    existingProductsCount: number;
-}
+export type SalesPdfReviewData = {
+    extractedName: string;
+    extractedPrice: number;
+    extractedQuantity: number;
+    matchedProduct: Product | null;
+};
 
-export async function processSalesPdf(pdfDataUri: string): Promise<ProcessedPdfResult> {
-  // 1. Extract products using AI
+export async function processSalesPdfForReview(pdfDataUri: string): Promise<SalesPdfReviewData[]> {
   const extractedResult = await extractProductsFromPdfFlow({ pdfDataUri });
   if (!extractedResult.products || extractedResult.products.length === 0) {
-    return { productsForCart: [], newProductsCount: 0, existingProductsCount: 0 };
+    return [];
   }
 
-  // 2. Get all existing products for lookup
   const allDbProducts = await getProducts();
   const productMap = new Map(allDbProducts.map(p => [p.name.toLowerCase().trim(), p]));
 
-  const productsToCreate: Omit<Product, 'id'>[] = [];
-  const productsForCartMap = new Map<string, Product>();
-
-  // 3. Differentiate between new and existing products
-  for (const extractedProduct of extractedResult.products) {
+  return extractedResult.products.map(extractedProduct => {
     const nameKey = extractedProduct.name.toLowerCase().trim();
-    const existingProduct = productMap.get(nameKey);
+    const matchedProduct = productMap.get(nameKey) || null;
+    return {
+      extractedName: extractedProduct.name,
+      extractedPrice: extractedProduct.price || 0,
+      extractedQuantity: extractedProduct.stock || 1, // 'stock' from PDF is interpreted as quantity
+      matchedProduct: matchedProduct
+    };
+  });
+}
 
-    if (existingProduct) {
-        if (!productsForCartMap.has(existingProduct.id!)) {
-             productsForCartMap.set(existingProduct.id!, existingProduct);
-        }
-    } else {
-        // Avoid adding duplicate new products if they appear multiple times in the PDF
-        if (!productsToCreate.some(p => p.name.toLowerCase().trim() === nameKey)) {
-            productsToCreate.push({
-                name: extractedProduct.name,
-                description: extractedProduct.description || '',
-                price: extractedProduct.price || 0,
-                costPrice: extractedProduct.costPrice || 0,
-                stock: extractedProduct.stock || 0,
+export async function addOrUpdateProductsAndGetCartItems(
+    items: { name: string; price: number; quantity: number; id?: string }[]
+): Promise<CartItem[]> {
+    const newProductsToCreate: Omit<Product, 'id'>[] = items
+        .filter(item => !item.id) // Filter for new products which don't have an ID
+        .map(item => ({
+            name: item.name,
+            price: item.price,
+            costPrice: 0, // Default cost price for new products from sales
+            stock: 0,     // Default stock, will be immediately adjusted by sale
+            description: '', // Default description
+        }));
+
+    // Batch-create new products if any
+    if (newProductsToCreate.length > 0) {
+        await addProductsBatch(newProductsToCreate);
+    }
+
+    // Re-fetch all products to get IDs for the new ones and latest data for all
+    const allDbProducts = await getProducts();
+    const productMapByName = new Map(allDbProducts.map(p => [p.name.toLowerCase().trim(), p]));
+    const productMapById = new Map(allDbProducts.map(p => [p.id!, p]));
+
+    const cartItems: CartItem[] = [];
+
+    for (const item of items) {
+        // Find product by ID if it exists, otherwise by name (for new/edited products)
+        const product = item.id
+            ? productMapById.get(item.id)
+            : productMapByName.get(item.name.toLowerCase().trim());
+        
+        if (product) {
+            cartItems.push({
+                product,
+                quantity: item.quantity,
+                price: item.price, // Use the price from the review form
             });
         }
     }
-  }
-  
-  const existingProductsCount = productsForCartMap.size;
-  let finalProductsForCart = Array.from(productsForCartMap.values());
-
-  // 4. Batch-create new products if any
-  if (productsToCreate.length > 0) {
-    await addProductsBatch(productsToCreate);
-
-    // 5. Re-fetch all products to get the newly created ones with their IDs
-    const updatedDbProducts = await getProducts();
-    const updatedProductMap = new Map(updatedDbProducts.map(p => [p.name.toLowerCase().trim(), p]));
-
-    // 6. Find the newly created products and add them to the cart list
-    for (const newProdData of productsToCreate) {
-        const nameKey = newProdData.name.toLowerCase().trim();
-        if (updatedProductMap.has(nameKey)) {
-            finalProductsForCart.push(updatedProductMap.get(nameKey)!);
-        }
-    }
-  }
-  
-  return {
-    productsForCart: finalProductsForCart,
-    newProductsCount: productsToCreate.length,
-    existingProductsCount: existingProductsCount,
-  };
+    return cartItems;
 }
 
 
