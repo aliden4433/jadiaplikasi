@@ -12,6 +12,7 @@ import { getProducts, addProductsBatch } from '../products/actions';
 export type SalesPdfReviewData = {
     extractedName: string;
     extractedPrice: number;
+    extractedCostPrice: number;
     extractedQuantity: number;
     matchedProduct: Product | null;
 };
@@ -23,7 +24,7 @@ export async function processSalesPdfForReview(pdfDataUri: string): Promise<Sale
   }
 
   // Group products by name and sum quantities
-  const consolidatedProductsMap = new Map<string, { name: string; price: number; quantity: number }>();
+  const consolidatedProductsMap = new Map<string, { name: string; price: number; costPrice: number; quantity: number }>();
 
   for (const product of extractedResult.products) {
     const nameKey = product.name.toLowerCase().trim();
@@ -34,6 +35,7 @@ export async function processSalesPdfForReview(pdfDataUri: string): Promise<Sale
         consolidatedProductsMap.set(nameKey, {
             name: product.name,
             price: product.price,
+            costPrice: product.costPrice,
             quantity: product.stock,
         });
     }
@@ -60,6 +62,7 @@ export async function processSalesPdfForReview(pdfDataUri: string): Promise<Sale
     return {
       extractedName: consolidatedProduct.name,
       extractedPrice: consolidatedProduct.price || 0,
+      extractedCostPrice: consolidatedProduct.costPrice || 0,
       extractedQuantity: consolidatedProduct.quantity || 1,
       matchedProduct: matchedProduct
     };
@@ -68,14 +71,14 @@ export async function processSalesPdfForReview(pdfDataUri: string): Promise<Sale
 
 
 export async function addOrUpdateProductsAndGetCartItems(
-    items: { name: string; price: number; quantity: number; id?: string }[]
+    items: { name: string; price: number; costPrice: number; quantity: number; id?: string }[]
 ): Promise<CartItem[]> {
     const newProductsToCreate: Omit<Product, 'id'>[] = items
         .filter(item => !item.id) // Filter for new products which don't have an ID
         .map(item => ({
             name: item.name,
             price: item.price,
-            costPrice: 0, // Default cost price for new products from sales
+            costPrice: item.costPrice, // Default cost price for new products from sales
             stock: 0,     // Default stock, will be immediately adjusted by sale
         }));
 

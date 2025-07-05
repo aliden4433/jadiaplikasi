@@ -39,6 +39,7 @@ type ImportStep = "upload" | "review" | "loading"
 const reviewItemSchema = z.object({
   name: z.string().min(1, "Nama tidak boleh kosong"),
   price: z.coerce.number().min(0, "Harga harus positif"),
+  costPrice: z.coerce.number().min(0, "Harga modal harus positif"),
   quantity: z.coerce.number().int().min(1, "Jumlah minimal 1"),
   id: z.string().optional(),
   matchedProduct: z.custom<Product | null>().optional(),
@@ -111,6 +112,7 @@ export function SalesImportButton({ onImportSuccess, products }: SalesImportButt
             const formValues = reviewData.map(item => ({
                 name: item.extractedName,
                 price: item.matchedProduct?.price ?? item.extractedPrice,
+                costPrice: item.matchedProduct?.costPrice ?? item.extractedCostPrice,
                 quantity: item.extractedQuantity,
                 id: item.matchedProduct?.id,
                 matchedProduct: item.matchedProduct,
@@ -280,6 +282,7 @@ export function SalesImportButton({ onImportSuccess, products }: SalesImportButt
                                                     form.setValue(`items.${index}.name`, selectedProduct.name);
                                                     form.setValue(`items.${index}.id`, selectedProduct.id);
                                                     form.setValue(`items.${index}.price`, selectedProduct.price);
+                                                    form.setValue(`items.${index}.costPrice`, selectedProduct.costPrice);
                                                     form.setValue(`items.${index}.matchedProduct`, selectedProduct);
                                                 }
                                                 setOpenState(index, false);
@@ -322,6 +325,17 @@ export function SalesImportButton({ onImportSuccess, products }: SalesImportButt
                             render={({ field }) => (
                               <FormItem>
                                 <Label>Harga Jual Satuan</Label>
+                                <FormControl><Input type="number" {...field} /></FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                           <FormField
+                            control={form.control}
+                            name={`items.${index}.costPrice`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <Label>Harga Modal Satuan</Label>
                                 <FormControl><Input type="number" {...field} /></FormControl>
                                 <FormMessage />
                               </FormItem>
