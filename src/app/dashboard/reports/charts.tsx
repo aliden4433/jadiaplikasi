@@ -14,7 +14,7 @@ interface BestsellersChartProps {
 
 const chartConfig = {
   total: {
-    label: "Units Sold",
+    label: "Unit Terjual",
     color: "hsl(var(--primary))",
   },
 } satisfies ChartConfig
@@ -32,7 +32,10 @@ export function BestsellersChart({ data }: BestsellersChartProps) {
             axisLine={false}
             />
           <YAxis />
-          <ChartTooltip content={<ChartTooltipContent />} />
+          <ChartTooltip
+            cursor={false}
+            content={<ChartTooltipContent indicator="line" />}
+          />
           <Bar dataKey="total" fill="var(--color-total)" radius={4} />
         </BarChart>
       </ResponsiveContainer>

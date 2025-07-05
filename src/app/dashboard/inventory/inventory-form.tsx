@@ -23,8 +23,8 @@ import type { InventoryRecommendationsOutput } from "@/ai/flows/inventory-recomm
 import { useToast } from "@/hooks/use-toast"
 
 const formSchema = z.object({
-  salesHistory: z.string().min(10, "Please provide more detailed sales history."),
-  currentStockLevels: z.string().min(10, "Please provide more detailed stock levels."),
+  salesHistory: z.string().min(10, "Harap berikan riwayat penjualan yang lebih detail."),
+  currentStockLevels: z.string().min(10, "Harap berikan tingkat stok yang lebih detail."),
   orderingConstraints: z.string().optional(),
 })
 
@@ -52,7 +52,7 @@ export function InventoryForm() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Could not generate recommendations. Please try again.",
+        description: "Tidak dapat menghasilkan rekomendasi. Silakan coba lagi.",
       })
     } finally {
       setIsLoading(false)
@@ -63,9 +63,9 @@ export function InventoryForm() {
     <div className="grid md:grid-cols-2 gap-8">
       <Card>
         <CardHeader>
-          <CardTitle>Inventory Assistant</CardTitle>
+          <CardTitle>Asisten Inventaris</CardTitle>
           <CardDescription>
-            Provide your sales and stock data to receive AI-powered reordering recommendations.
+            Berikan data penjualan dan stok Anda untuk menerima rekomendasi pemesanan ulang bertenaga AI.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -76,16 +76,16 @@ export function InventoryForm() {
                 name="salesHistory"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sales History</FormLabel>
+                    <FormLabel>Riwayat Penjualan</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="e.g., Last 7 days: 20 Lattes, 15 Croissants..."
+                        placeholder="e.g., 7 hari terakhir: 20 Latte, 15 Croissant..."
                         className="min-h-[100px]"
                         {...field}
                       />
                     </FormControl>
                     <FormDescription>
-                      Summarize recent sales history, including product names and quantities sold.
+                      Ringkas riwayat penjualan terakhir, termasuk nama produk dan jumlah yang terjual.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -96,16 +96,16 @@ export function InventoryForm() {
                 name="currentStockLevels"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Current Stock Levels</FormLabel>
+                    <FormLabel>Tingkat Stok Saat Ini</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="e.g., Lattes: 30 units, Croissants: 10 units..."
+                        placeholder="e.g., Latte: 30 unit, Croissant: 10 unit..."
                         className="min-h-[100px]"
                         {...field}
                       />
                     </FormControl>
                     <FormDescription>
-                      List the current stock level for each relevant product.
+                      Sebutkan tingkat stok saat ini untuk setiap produk yang relevan.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -116,15 +116,15 @@ export function InventoryForm() {
                 name="orderingConstraints"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Ordering Constraints (Optional)</FormLabel>
+                    <FormLabel>Batasan Pemesanan (Opsional)</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="e.g., Minimum order of 50 units for coffee beans..."
+                        placeholder="e.g., Pesanan minimum 50 unit untuk biji kopi..."
                         {...field}
                       />
                     </FormControl>
                     <FormDescription>
-                      Include any budget limits, supplier minimums, or storage constraints.
+                      Sertakan batasan anggaran, minimum dari pemasok, atau batasan penyimpanan.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -136,7 +136,7 @@ export function InventoryForm() {
                 ) : (
                   <Wand2 className="mr-2 h-4 w-4" />
                 )}
-                Generate Recommendations
+                Hasilkan Rekomendasi
               </Button>
             </form>
           </Form>
@@ -145,16 +145,16 @@ export function InventoryForm() {
       
       <Card className="flex flex-col">
         <CardHeader>
-          <CardTitle>AI Recommendations</CardTitle>
+          <CardTitle>Rekomendasi AI</CardTitle>
           <CardDescription>
-            Optimal reordering quantities will appear here.
+            Kuantitas pemesanan ulang yang optimal akan muncul di sini.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex-grow flex items-center justify-center">
           {isLoading ? (
             <div className="flex flex-col items-center gap-2 text-muted-foreground">
               <Loader2 className="h-8 w-8 animate-spin" />
-              <p>Generating insights...</p>
+              <p>Menghasilkan wawasan...</p>
             </div>
           ) : recommendations ? (
             <div className="prose prose-sm dark:prose-invert max-w-none">
@@ -163,7 +163,7 @@ export function InventoryForm() {
           ) : (
              <div className="text-center text-muted-foreground">
                 <Wand2 className="mx-auto h-12 w-12" />
-                <p className="mt-2">Your recommendations are waiting.</p>
+                <p className="mt-2">Rekomendasi Anda sedang menunggu.</p>
              </div>
           )}
         </CardContent>

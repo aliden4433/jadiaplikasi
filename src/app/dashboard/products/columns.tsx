@@ -3,23 +3,14 @@
 import { ColumnDef } from "@tanstack/react-table"
 import Image from "next/image"
 
-import { Product } from "@/lib/types"
+import type { Product } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { MoreHorizontal } from "lucide-react"
+import { ProductRowActions } from "./product-row-actions"
 
 export const columns: ColumnDef<Product>[] = [
   {
     accessorKey: "image",
-    header: "Image",
+    header: "Gambar",
     cell: ({ row }) => {
       const product = row.original
       return (
@@ -28,7 +19,7 @@ export const columns: ColumnDef<Product>[] = [
           alt={product.name}
           width={40}
           height={40}
-          className="rounded-md"
+          className="rounded-md object-cover"
           data-ai-hint={`${product.category} ${product.name}`}
         />
       )
@@ -38,52 +29,33 @@ export const columns: ColumnDef<Product>[] = [
   },
   {
     accessorKey: "name",
-    header: "Name",
+    header: "Nama",
   },
   {
     accessorKey: "category",
-    header: "Category",
+    header: "Kategori",
     cell: ({ row }) => <Badge variant="outline">{row.original.category}</Badge>,
   },
   {
     accessorKey: "price",
-    header: "Price",
+    header: "Harga",
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue("price"))
-      const formatted = new Intl.NumberFormat("en-US", {
+      const formatted = new Intl.NumberFormat("id-ID", {
         style: "currency",
-        currency: "USD",
+        currency: "IDR",
+        minimumFractionDigits: 0,
       }).format(amount)
       return <div className="font-medium">{formatted}</div>
     },
   },
   {
     accessorKey: "stock",
-    header: "Stock",
+    header: "Stok",
   },
   {
     id: "actions",
-    cell: ({ row }) => {
-      const product = row.original
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(product.id)}>
-              Copy product ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Edit product</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">Delete product</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
+    header: "Aksi",
+    cell: ({ row }) => <ProductRowActions product={row.original} />,
   },
 ]

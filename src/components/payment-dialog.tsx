@@ -22,38 +22,40 @@ interface PaymentDialogProps {
 }
 
 export function PaymentDialog({ open, onOpenChange, total, onPaymentSuccess }: PaymentDialogProps) {
+  const formattedTotal = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(total);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Complete Payment</DialogTitle>
+          <DialogTitle>Selesaikan Pembayaran</DialogTitle>
           <DialogDescription>
-            Total amount to be paid: <span className="font-bold text-foreground">${total.toFixed(2)}</span>
+            Jumlah total yang harus dibayar: <span className="font-bold text-foreground">{formattedTotal}</span>
           </DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="card" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="card">
-              <CreditCard className="mr-2 h-4 w-4" /> Card
+              <CreditCard className="mr-2 h-4 w-4" /> Kartu
             </TabsTrigger>
             <TabsTrigger value="mobile">
-              <Smartphone className="mr-2 h-4 w-4" /> Mobile
+              <Smartphone className="mr-2 h-4 w-4" /> QRIS
             </TabsTrigger>
           </TabsList>
           <TabsContent value="card">
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="card-name">Name on Card</Label>
+                <Label htmlFor="card-name">Nama di Kartu</Label>
                 <Input id="card-name" placeholder="John Doe" />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="card-number">Card Number</Label>
+                <Label htmlFor="card-number">Nomor Kartu</Label>
                 <Input id="card-number" placeholder="**** **** **** 1234" />
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="expiry-date">Expires</Label>
-                  <Input id="expiry-date" placeholder="MM/YY" />
+                  <Label htmlFor="expiry-date">Kedaluwarsa</Label>
+                  <Input id="expiry-date" placeholder="BB/TT" />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="cvc">CVC</Label>
@@ -63,22 +65,16 @@ export function PaymentDialog({ open, onOpenChange, total, onPaymentSuccess }: P
             </div>
           </TabsContent>
           <TabsContent value="mobile">
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="mobile-number">Phone Number</Label>
-                <Input id="mobile-number" type="tel" placeholder="012 345 6789" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="mobile-provider">Provider</Label>
-                <Input id="mobile-provider" placeholder="e.g., MTN, Vodacom" />
-              </div>
+            <div className="grid gap-4 py-4 place-items-center">
+              <img src="https://placehold.co/250x250.png" alt="QR Code" data-ai-hint="QR code" />
+              <p className="text-sm text-muted-foreground">Pindai kode QR untuk membayar.</p>
             </div>
           </TabsContent>
         </Tabs>
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Batal</Button>
           <Button type="submit" onClick={onPaymentSuccess}>
-            Pay ${total.toFixed(2)}
+            Bayar {formattedTotal}
           </Button>
         </DialogFooter>
       </DialogContent>

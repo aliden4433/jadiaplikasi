@@ -1,26 +1,17 @@
-import type { Product, Sale } from '@/lib/types';
+import type { Sale } from '@/lib/types'
 
-export const products: Product[] = [
-  { id: 'prod1', name: 'Espresso', price: 2.50, stock: 100, image: 'https://placehold.co/150x150.png', category: 'Drinks', description: 'Strong black coffee.' },
-  { id: 'prod2', name: 'Latte', price: 3.50, stock: 80, image: 'https://placehold.co/150x150.png', category: 'Drinks', description: 'Espresso with steamed milk.' },
-  { id: 'prod3', name: 'Croissant', price: 2.75, stock: 50, image: 'https://placehold.co/150x150.png', category: 'Pastries', description: 'Buttery, flaky pastry.' },
-  { id: 'prod4', name: 'Muffin', price: 3.00, stock: 60, image: 'https://placehold.co/150x150.png', category: 'Pastries', description: 'Blueberry muffin.' },
-  { id: 'prod5', name: 'Iced Tea', price: 2.25, stock: 90, image: 'https://placehold.co/150x150.png', category: 'Drinks', description: 'Refreshing iced tea.' },
-  { id: 'prod6', name: 'Sandwich', price: 6.50, stock: 30, image: 'https://placehold.co/150x150.png', category: 'Food', description: 'Turkey and cheese sandwich.' },
-  { id: 'prod7', name: 'Bagel', price: 2.50, stock: 70, image: 'https://placehold.co/150x150.png', category: 'Pastries', description: 'Plain bagel with cream cheese.' },
-  { id: 'prod8', name: 'Scone', price: 3.25, stock: 45, image: 'https://placehold.co/150x150.png', category: 'Pastries', description: 'Cranberry orange scone.' },
-  { id: 'prod9', name: 'Hot Chocolate', price: 3.75, stock: 65, image: 'https://placehold.co/150x150.png', category: 'Drinks', description: 'Rich hot chocolate with whipped cream.' },
-  { id: 'prod10', name: 'Salad', price: 7.50, stock: 25, image: 'https://placehold.co/150x150.png', category: 'Food', description: 'Fresh garden salad.' },
-];
+const today = new Date()
+const yesterday = new Date()
+yesterday.setDate(today.getDate() - 1)
 
-const today = new Date();
-const yesterday = new Date();
-yesterday.setDate(today.getDate() - 1);
-
+// Note: This is now historical mock data. Product data is managed in Firestore.
 export const sales: Sale[] = [
   {
     id: 'sale1',
-    items: [{ product: products[0], quantity: 2 }, { product: products[2], quantity: 1 }],
+    items: [
+      { productId: 'prod1', productName: 'Espresso', quantity: 2, price: 2.5 },
+      { productId: 'prod3', productName: 'Croissant', quantity: 1, price: 2.75 },
+    ],
     subtotal: 7.75,
     discount: 0,
     total: 7.75,
@@ -28,26 +19,33 @@ export const sales: Sale[] = [
   },
   {
     id: 'sale2',
-    items: [{ product: products[1], quantity: 1 }, { product: products[3], quantity: 2 }],
-    subtotal: 9.50,
-    discount: 1.00,
-    total: 8.50,
+    items: [
+      { productId: 'prod1', productName: 'Latte', quantity: 1, price: 3.5 },
+      { productId: 'prod3', productName: 'Muffin', quantity: 2, price: 3.0 },
+    ],
+    subtotal: 9.5,
+    discount: 1.0,
+    total: 8.5,
     date: today.toISOString(),
   },
   {
     id: 'sale3',
-    items: [{ product: products[5], quantity: 1 }],
-    subtotal: 6.50,
+    items: [{ productId: 'prod6', productName: 'Sandwich', quantity: 1, price: 6.5 }],
+    subtotal: 6.5,
     discount: 0,
-    total: 6.50,
+    total: 6.5,
     date: yesterday.toISOString(),
   },
   {
     id: 'sale4',
-    items: [{ product: products[4], quantity: 1 }, { product: products[6], quantity: 1 }, { product: products[0], quantity: 3 }],
+    items: [
+      { productId: 'prod5', productName: 'Iced Tea', quantity: 1, price: 2.25 },
+      { productId: 'prod7', productName: 'Bagel', quantity: 1, price: 2.5 },
+      { productId: 'prod1', productName: 'Espresso', quantity: 3, price: 2.5 },
+    ],
     subtotal: 12.25,
-    discount: 2.00,
+    discount: 2.0,
     total: 10.25,
     date: yesterday.toISOString(),
   },
-];
+]

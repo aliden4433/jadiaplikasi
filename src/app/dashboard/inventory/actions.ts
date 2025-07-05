@@ -11,6 +11,6 @@ export async function generateRecommendations(
     return result
   } catch (error) {
     console.error("Error generating recommendations:", error)
-    throw new Error("Failed to generate inventory recommendations.")
+    throw new Error("Gagal membuat rekomendasi inventaris.")
   }
 }

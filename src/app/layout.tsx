@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
   title: 'BizFlow POS',
-  description: 'A mobile POS cash register app for managing sales transactions and finances.',
+  description: 'Aplikasi kasir POS untuk mengelola transaksi penjualan dan keuangan.',
   icons: [{ rel: "icon", url: "/logo.svg" }],
 };
 
@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="id" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
         {children}
         <Toaster />
