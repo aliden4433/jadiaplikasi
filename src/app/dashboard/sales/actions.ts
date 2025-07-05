@@ -137,10 +137,12 @@ export async function addSale(saleData: {
       throw new Error("Tidak ada item yang valid di keranjang untuk diproses.");
     }
     
-    // 2. Recalculate totals on the server based only on valid items to ensure data integrity.
+    // 2. Recalculate totals on the server based on valid items to ensure data integrity.
     const subtotal = validItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
     const discountAmount = subtotal * (saleData.discountPercentage / 100);
     const total = subtotal - discountAmount;
+    const totalCost = validItems.reduce((acc, item) => acc + (item.product.costPrice || 0) * item.quantity, 0);
+    const profit = total - totalCost;
 
     await runTransaction(db, async (transaction) => {
       // Step 1: READ all product documents first.
@@ -158,10 +160,13 @@ export async function addSale(saleData: {
           productName: item.product.name,
           quantity: item.quantity,
           price: item.price,
+          costPrice: item.product.costPrice || 0,
         })),
         subtotal,
         discount: discountAmount,
         total,
+        totalCost,
+        profit,
         date: new Date().toISOString(),
       };
       transaction.set(saleRef, saleToSave);

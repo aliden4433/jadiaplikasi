@@ -164,6 +164,12 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
                       <p>Total</p>
                       <p>{formatCurrency(sale.total)}</p>
                     </div>
+                    {sale.profit !== undefined && (
+                        <div className="flex justify-between text-sm text-green-600 dark:text-green-500 pt-1">
+                            <p className="font-medium">Keuntungan</p>
+                            <p className="font-medium">{formatCurrency(sale.profit)}</p>
+                        </div>
+                    )}
                   </div>
                 </AccordionContent>
               </AccordionItem>

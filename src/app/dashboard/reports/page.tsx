@@ -1,4 +1,4 @@
-import { DollarSign, Package, ShoppingBag } from "lucide-react"
+import { DollarSign, Package, ShoppingBag, TrendingUp } from "lucide-react"
 
 import { getProducts } from "../products/actions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,9 +11,10 @@ function getTodaysSalesStats(sales: Sale[]) {
   const todaysSales = sales.filter(sale => sale.date.startsWith(today))
   
   const revenue = todaysSales.reduce((acc, sale) => acc + sale.total, 0)
+  const profit = todaysSales.reduce((acc, sale) => acc + (sale.profit || 0), 0)
   const count = todaysSales.length
 
-  return { revenue, count }
+  return { revenue, count, profit }
 }
 
 function getBestsellers(sales: Sale[]) {
@@ -38,12 +39,12 @@ function getBestsellers(sales: Sale[]) {
 export default async function ReportsPage() {
   const products = await getProducts()
   const sales = await getSalesHistory()
-  const { revenue: todaysRevenue, count: todaysSalesCount } = getTodaysSalesStats(sales)
+  const { revenue: todaysRevenue, count: todaysSalesCount, profit: todaysProfit } = getTodaysSalesStats(sales)
   const bestsellers = getBestsellers(sales)
 
   return (
     <div className="space-y-8">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pendapatan Hari Ini</CardTitle>
@@ -54,6 +55,18 @@ export default async function ReportsPage() {
               {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(todaysRevenue)}
             </div>
             <p className="text-xs text-muted-foreground">dari {todaysSalesCount} penjualan</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Keuntungan Hari Ini</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(todaysProfit)}
+            </div>
+            <p className="text-xs text-muted-foreground">Perkiraan laba bersih hari ini</p>
           </CardContent>
         </Card>
         <Card>

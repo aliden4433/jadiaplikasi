@@ -18,6 +18,7 @@ export type SaleItem = {
   productName: string
   quantity: number
   price: number
+  costPrice: number
 }
 
 export type Sale = {
@@ -26,5 +27,7 @@ export type Sale = {
   subtotal: number
   discount: number
   total: number
+  totalCost: number
+  profit: number
   date: string
 }
