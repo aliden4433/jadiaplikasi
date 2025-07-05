@@ -14,6 +14,12 @@ import { ProductFormDialog } from "./product-form-dialog"
 const NameCell = ({ product }: { product: Product }) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false)
 
+  // New logic for variants
+  const nameParts = product.name.split(" - ");
+  const baseName = nameParts[0];
+  const variantDescription = nameParts.length > 1 ? nameParts.slice(1).join(" - ") : null;
+
+
   return (
     <>
       <ProductFormDialog
@@ -25,7 +31,12 @@ const NameCell = ({ product }: { product: Product }) => {
         onClick={() => setIsEditDialogOpen(true)}
         className="font-medium text-left hover:underline"
       >
-        {product.name}
+        {baseName}
+        {variantDescription && (
+            <span className="block text-xs text-muted-foreground font-normal">
+                {variantDescription}
+            </span>
+        )}
       </button>
     </>
   )

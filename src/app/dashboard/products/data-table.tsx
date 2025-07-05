@@ -40,6 +40,11 @@ const MobileCard = ({ row, userRole }: { row: any, userRole?: AppUser['role'] })
   const product = row.original as Product
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false)
 
+  const nameParts = product.name.split(" - ");
+  const baseName = nameParts[0];
+  const variantDescription = nameParts.length > 1 ? nameParts.slice(1).join(" - ") : null;
+
+
   return (
     <>
        {userRole === 'admin' && (
@@ -68,7 +73,12 @@ const MobileCard = ({ row, userRole }: { row: any, userRole?: AppUser['role'] })
                   disabled={userRole !== 'admin'}
                   className="font-semibold pr-2 break-words text-left hover:underline disabled:no-underline disabled:cursor-text"
                 >
-                  {product.name}
+                  {baseName}
+                  {variantDescription && (
+                    <span className="block text-xs text-muted-foreground font-normal">
+                        {variantDescription}
+                    </span>
+                  )}
                 </button>
                  {userRole === 'admin' && (
                     <div className="-mt-2 -mr-2 flex-shrink-0">

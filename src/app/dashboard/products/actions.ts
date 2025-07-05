@@ -27,6 +27,19 @@ export async function addProduct(product: Omit<Product, "id">) {
   }
 }
 
+export async function duplicateProduct(product: Omit<Product, "id">) {
+  try {
+    const productsCol = collection(db, "products")
+    const newProduct = { ...product, name: `${product.name} - Salinan` }
+    await addDoc(productsCol, newProduct)
+    revalidatePath("/dashboard/products")
+    return { success: true, message: "Produk berhasil diduplikasi." }
+  } catch (error) {
+    console.error("Error duplicating product: ", error)
+    return { success: false, message: "Gagal menduplikasi produk." }
+  }
+}
+
 export async function extractProducts(pdfDataUri: string): Promise<ExtractProductsOutput> {
   try {
     const result = await extractProductsFromPdfFlow({ pdfDataUri });

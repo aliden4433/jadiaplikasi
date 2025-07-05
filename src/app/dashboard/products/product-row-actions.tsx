@@ -2,7 +2,7 @@
 "use client"
 
 import { useState } from "react"
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+import { MoreHorizontal, Pencil, Trash2, Copy } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -26,7 +26,7 @@ import {
 
 import type { Product } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
-import { deleteProduct } from "./actions"
+import { deleteProduct, duplicateProduct } from "./actions"
 import { ProductFormDialog } from "./product-form-dialog"
 
 interface ProductRowActionsProps {
@@ -37,7 +37,33 @@ export function ProductRowActions({ product }: ProductRowActionsProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isDuplicating, setIsDuplicating] = useState(false)
   const { toast } = useToast()
+
+  async function handleDuplicate() {
+    if (!product) return;
+    setIsDuplicating(true);
+    const { id, ...productToDuplicate } = product;
+    try {
+      const result = await duplicateProduct(productToDuplicate);
+      if (result.success) {
+        toast({
+          title: "Sukses",
+          description: "Produk duplikat telah dibuat.",
+        });
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Gagal menduplikasi produk.",
+      });
+    } finally {
+      setIsDuplicating(false);
+    }
+  }
 
   async function handleDelete() {
     if (!product.id) return
@@ -98,6 +124,10 @@ export function ProductRowActions({ product }: ProductRowActionsProps) {
           <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
             <Pencil className="mr-2 h-4 w-4" />
             <span>Edit</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleDuplicate} disabled={isDuplicating}>
+            <Copy className="mr-2 h-4 w-4" />
+            <span>{isDuplicating ? "Menduplikasi..." : "Duplikat"}</span>
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => setIsDeleteDialogOpen(true)}
