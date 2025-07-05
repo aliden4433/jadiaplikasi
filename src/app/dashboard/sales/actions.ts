@@ -50,14 +50,27 @@ export async function processSalesPdfForReview(pdfDataUri: string): Promise<Sale
   return consolidatedExtractedProducts.map(consolidatedProduct => {
     const extractedNameLower = consolidatedProduct.name.toLowerCase().trim();
     
-    // Find the best possible match by prioritizing exact matches, then substring matches.
-    const matchedProduct = 
-        // 1. Exact match (case-insensitive, trimmed)
-        sortedDbProducts.find(p => p.name.toLowerCase().trim() === extractedNameLower) ||
-        // 2. DB product name is found within the extracted name
-        //    (e.g., DB: "Kopi Susu", PDF: "Item Kopi Susu Spesial")
-        sortedDbProducts.find(p => extractedNameLower.includes(p.name.toLowerCase().trim())) ||
-        null;
+    let matchedProduct: Product | null = null;
+
+    // Custom mapping logic based on user request
+    if (extractedNameLower.includes('120 x 50')) {
+      matchedProduct = sortedDbProducts.find(p => p.name.toLowerCase().trim() === 'glaswool 50 cm') || null;
+    } else if (extractedNameLower.includes('120 x 100')) {
+      matchedProduct = sortedDbProducts.find(p => p.name.toLowerCase().trim() === 'glaswool 1m') || null;
+    } else if (extractedNameLower.includes('60 x 30')) {
+      matchedProduct = sortedDbProducts.find(p => p.name.toLowerCase().trim() === 'putih 60x30') || null;
+    }
+
+    // If no custom rule matched, fall back to the generic fuzzy matching
+    if (!matchedProduct) {
+        matchedProduct = 
+            // 1. Exact match (case-insensitive, trimmed)
+            sortedDbProducts.find(p => p.name.toLowerCase().trim() === extractedNameLower) ||
+            // 2. DB product name is found within the extracted name
+            //    (e.g., DB: "Kopi Susu", PDF: "Item Kopi Susu Spesial")
+            sortedDbProducts.find(p => extractedNameLower.includes(p.name.toLowerCase().trim())) ||
+            null;
+    }
 
     return {
       extractedName: consolidatedProduct.name,
