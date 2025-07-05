@@ -82,23 +82,20 @@ export async function processSalesPdf(pdfDataUri: string): Promise<ProcessedPdfR
 
 export async function addSale(saleData: {
   items: CartItem[]
-  subtotal: number
-  discountAmount: number
-  total: number
+  discountPercentage: number
 }) {
   try {
-    // 1. Filter out items that don't have a product ID to prevent crashes.
-    const validItems = saleData.items.filter(item => item.product.id);
+    // 1. Filter out items that don't have a product or product ID to prevent crashes.
+    const validItems = saleData.items.filter(item => item.product && item.product.id);
     
     if (validItems.length === 0) {
       throw new Error("Tidak ada item yang valid di keranjang untuk diproses.");
     }
     
-    // 2. Recalculate totals based only on valid items to ensure data integrity.
-    const newSubtotal = validItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    const discountPercentage = saleData.subtotal > 0 ? (saleData.discountAmount / saleData.subtotal) : 0;
-    const newDiscountAmount = newSubtotal * discountPercentage;
-    const newTotal = newSubtotal - newDiscountAmount;
+    // 2. Recalculate totals on the server based only on valid items to ensure data integrity.
+    const subtotal = validItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const discountAmount = subtotal * (saleData.discountPercentage / 100);
+    const total = subtotal - discountAmount;
 
     await runTransaction(db, async (transaction) => {
       const salesCol = collection(db, "sales")
@@ -111,9 +108,9 @@ export async function addSale(saleData: {
           quantity: item.quantity,
           price: item.price,
         })),
-        subtotal: newSubtotal,
-        discount: newDiscountAmount,
-        total: newTotal,
+        subtotal,
+        discount: discountAmount,
+        total,
         date: new Date().toISOString(),
       }
       transaction.set(saleRef, saleToSave)

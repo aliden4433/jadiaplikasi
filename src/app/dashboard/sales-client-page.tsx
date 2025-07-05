@@ -149,9 +149,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
 
     const saleData = {
       items: cart,
-      subtotal,
-      discountAmount,
-      total,
+      discountPercentage: discount,
     }
 
     try {
@@ -284,7 +282,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
             </div>
           </div>
           <CardFooter className="p-4 pt-0">
-            <Button className="w-full" onClick={handleProcessSale} disabled={total <= 0 || isProcessing}>
+            <Button className="w-full" onClick={handleProcessSale} disabled={isProcessing}>
               {isProcessing ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
