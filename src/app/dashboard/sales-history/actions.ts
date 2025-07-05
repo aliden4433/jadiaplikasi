@@ -24,19 +24,21 @@ export async function deleteSale(sale: Sale) {
         }));
       
       // Step 1: READ all product documents first.
-      const productDocs = await Promise.all(
-        validItemsWithRefs.map(x => transaction.get(x.ref))
-      );
-      
-      // Step 2: Now perform all WRITE operations.
-      for (let i = 0; i < productDocs.length; i++) {
-        const productDoc = productDocs[i];
-        const { itemData, ref } = validItemsWithRefs[i];
+      if (validItemsWithRefs.length > 0) {
+        const productDocs = await Promise.all(
+          validItemsWithRefs.map(x => transaction.get(x.ref))
+        );
+        
+        // Step 2: Now perform all WRITE operations.
+        for (let i = 0; i < productDocs.length; i++) {
+          const productDoc = productDocs[i];
+          const { itemData, ref } = validItemsWithRefs[i];
 
-        if (productDoc.exists()) {
-          const currentStock = productDoc.data().stock || 0;
-          const newStock = currentStock + itemData.quantity;
-          transaction.update(ref, { stock: newStock });
+          if (productDoc.exists()) {
+            const currentStock = productDoc.data().stock || 0;
+            const newStock = currentStock + itemData.quantity;
+            transaction.update(ref, { stock: newStock });
+          }
         }
       }
 
@@ -55,4 +57,25 @@ export async function deleteSale(sale: Sale) {
     const errorMessage = error instanceof Error ? error.message : 'Gagal menghapus transaksi.';
     return { success: false, message: errorMessage };
   }
+}
+
+export async function deleteSales(sales: Sale[]) {
+    if (!sales || sales.length === 0) {
+      return { success: false, message: 'Tidak ada transaksi yang dipilih.' };
+    }
+  
+    try {
+      await Promise.all(sales.map(sale => deleteSale(sale)));
+  
+      revalidatePath('/dashboard/sales-history');
+      revalidatePath('/dashboard/products');
+      revalidatePath('/dashboard/reports');
+      revalidatePath('/dashboard');
+  
+      return { success: true, message: `${sales.length} transaksi berhasil dihapus dan stok dikembalikan.` };
+    } catch (error) {
+      console.error('Error deleting sales: ', error);
+      const errorMessage = error instanceof Error ? error.message : 'Gagal menghapus beberapa transaksi.';
+      return { success: false, message: errorMessage };
+    }
 }

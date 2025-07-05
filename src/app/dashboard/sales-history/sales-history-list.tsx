@@ -28,8 +28,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { deleteSale } from "./actions";
+import { deleteSales, deleteSale } from "./actions";
 import { ExportSalesButton } from "./export-sales-button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -40,7 +41,8 @@ interface SalesHistoryListProps {
 
 export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps) {
   const [sales, setSales] = useState(initialSales);
-  const [saleToDelete, setSaleToDelete] = useState<Sale | null>(null);
+  const [selectedSales, setSelectedSales] = useState<string[]>([]);
+  const [salesForDeletion, setSalesForDeletion] = useState<Sale[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -72,6 +74,11 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
     })
   }, [sales, date])
 
+  // Clear selections when filter changes
+  useEffect(() => {
+    setSelectedSales([]);
+  }, [date]);
+
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -79,22 +86,28 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
       minimumFractionDigits: 0,
     }).format(amount);
 
-  const handleDeleteClick = (sale: Sale) => {
-    setSaleToDelete(sale);
+  const handleDeleteRequest = (salesToDelete: Sale[]) => {
+    if (userRole !== 'admin' || salesToDelete.length === 0) return;
+    setSalesForDeletion(salesToDelete);
   };
 
   const handleConfirmDelete = async () => {
-    if (!saleToDelete) return;
+    if (salesForDeletion.length === 0) return;
     setIsDeleting(true);
     try {
-      const result = await deleteSale(saleToDelete);
+      const result = salesForDeletion.length === 1 
+        ? await deleteSale(salesForDeletion[0]) 
+        : await deleteSales(salesForDeletion);
+        
       if (result.success) {
         toast({
           title: "Sukses",
           description: result.message,
         });
-        setSales(sales.filter(s => s.id !== saleToDelete.id));
-        setSaleToDelete(null);
+        const idsToDelete = new Set(salesForDeletion.map(s => s.id));
+        setSales(currentSales => currentSales.filter(s => !idsToDelete.has(s.id)));
+        setSalesForDeletion([]);
+        setSelectedSales([]);
       } else {
         throw new Error(result.message);
       }
@@ -108,6 +121,31 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
       setIsDeleting(false);
     }
   };
+  
+  const handleDialogChange = (open: boolean) => {
+    if (!open) {
+      setSalesForDeletion([]);
+    }
+  };
+
+  const handleSelectSale = (saleId: string, checked: boolean) => {
+    setSelectedSales(prev => {
+        if (checked) {
+            return [...prev, saleId];
+        } else {
+            return prev.filter(id => id !== saleId);
+        }
+    });
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+        setSelectedSales(filteredSales.map(s => s.id));
+    } else {
+        setSelectedSales([]);
+    }
+  };
+
 
   if (initialSales.length === 0) {
     return (
@@ -175,20 +213,57 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
               </div>
           </div>
         </CardHeader>
-        <CardContent>
+         {userRole === 'admin' && (
+            <div className="px-6 pb-4 border-t border-b">
+                <div className="flex items-center gap-4 h-9">
+                    <Checkbox
+                        id="select-all"
+                        checked={filteredSales.length > 0 && selectedSales.length === filteredSales.length}
+                        onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
+                        aria-label="Pilih semua"
+                        disabled={filteredSales.length === 0}
+                    />
+                    <label htmlFor="select-all" className="text-sm font-medium text-muted-foreground select-none">
+                       {selectedSales.length > 0 ? `${selectedSales.length} dipilih` : 'Pilih semua'}
+                    </label>
+                    {selectedSales.length > 0 && (
+                        <Button
+                            variant="destructive"
+                            size="sm"
+                            className="ml-auto"
+                            onClick={() => handleDeleteRequest(sales.filter(s => selectedSales.includes(s.id)))}
+                        >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Hapus ({selectedSales.length})
+                        </Button>
+                    )}
+                </div>
+            </div>
+        )}
+        <CardContent className="pt-4">
           {filteredSales.length > 0 ? (
               <Accordion type="single" collapsible className="w-full space-y-4">
                 {filteredSales.map((sale) => (
                   <AccordionItem value={sale.id} key={sale.id} className="border-b-0 rounded-lg border overflow-hidden bg-card">
                     <AccordionTrigger className="hover:bg-accent/50 px-4 transition-colors group data-[state=open]:bg-accent/50">
                       <div className="flex justify-between items-center w-full pr-4">
-                        <div className="text-left">
-                          <p className="font-semibold">
-                            {sale.transactionId || 'No ID'}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {format(new Date(sale.date), "d MMM yyyy, HH:mm", { locale: id })}
-                          </p>
+                        <div className="flex items-center gap-4">
+                            {userRole === 'admin' && (
+                                <Checkbox
+                                    checked={selectedSales.includes(sale.id)}
+                                    onCheckedChange={(checked) => handleSelectSale(sale.id, checked as boolean)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    aria-label={`Pilih transaksi ${sale.transactionId}`}
+                                />
+                            )}
+                            <div className="text-left">
+                            <p className="font-semibold">
+                                {sale.transactionId || 'No ID'}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                                {format(new Date(sale.date), "d MMM yyyy, HH:mm", { locale: id })}
+                            </p>
+                            </div>
                         </div>
                         <div className="flex items-center gap-2">
                             <p className="font-bold text-base text-primary">{formatCurrency(sale.total)}</p>
@@ -201,7 +276,7 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
                                     onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        handleDeleteClick(sale);
+                                        handleDeleteRequest([sale]);
                                     }}
                                     aria-label="Hapus Transaksi"
                                 >
@@ -263,12 +338,12 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
         </CardContent>
       </Card>
       
-      <AlertDialog open={!!saleToDelete} onOpenChange={(open) => !open && setSaleToDelete(null)}>
+      <AlertDialog open={salesForDeletion.length > 0} onOpenChange={handleDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
             <AlertDialogDescription>
-              Tindakan ini tidak dapat dibatalkan. Ini akan menghapus transaksi penjualan dan mengembalikan stok produk yang terjual.
+              Tindakan ini tidak dapat dibatalkan. Ini akan menghapus {salesForDeletion.length} transaksi penjualan dan mengembalikan stok produk yang terjual.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
