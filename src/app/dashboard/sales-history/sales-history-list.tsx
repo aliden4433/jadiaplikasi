@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react";
@@ -114,6 +115,7 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
                     <div className="flex items-center gap-4">
                         <p className="font-bold text-lg text-primary">{formatCurrency(sale.total)}</p>
                         <Button
+                            asChild
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
@@ -124,7 +126,9 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
                             }}
                             aria-label="Hapus Transaksi"
                         >
-                            <Trash2 className="h-4 w-4" />
+                            <span>
+                              <Trash2 className="h-4 w-4" />
+                            </span>
                         </Button>
                     </div>
                   </div>
