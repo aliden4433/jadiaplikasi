@@ -87,27 +87,39 @@ export async function addSale(saleData: {
   total: number
 }) {
   try {
+    // 1. Filter out items that don't have a product ID to prevent crashes.
+    const validItems = saleData.items.filter(item => item.product.id);
+    
+    if (validItems.length === 0) {
+      throw new Error("Tidak ada item yang valid di keranjang untuk diproses.");
+    }
+    
+    // 2. Recalculate totals based only on valid items to ensure data integrity.
+    const newSubtotal = validItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const discountPercentage = saleData.subtotal > 0 ? (saleData.discountAmount / saleData.subtotal) : 0;
+    const newDiscountAmount = newSubtotal * discountPercentage;
+    const newTotal = newSubtotal - newDiscountAmount;
+
     await runTransaction(db, async (transaction) => {
       const salesCol = collection(db, "sales")
       const saleRef = doc(salesCol)
       
       const saleToSave = {
-        items: saleData.items.map(item => ({
-          productId: item.product.id!,
+        items: validItems.map(item => ({
+          productId: item.product.id!, // Safe due to the filter above
           productName: item.product.name,
           quantity: item.quantity,
           price: item.price,
         })),
-        subtotal: saleData.subtotal,
-        discount: saleData.discountAmount,
-        total: saleData.total,
+        subtotal: newSubtotal,
+        discount: newDiscountAmount,
+        total: newTotal,
         date: new Date().toISOString(),
       }
       transaction.set(saleRef, saleToSave)
 
-      for (const item of saleData.items) {
-        if (!item.product.id) continue
-        const productRef = doc(db, "products", item.product.id)
+      for (const item of validItems) {
+        const productRef = doc(db, "products", item.product.id!)
         const productDoc = await transaction.get(productRef)
 
         if (!productDoc.exists()) {
@@ -129,7 +141,12 @@ export async function addSale(saleData: {
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/reports")
 
-    return { success: true, message: "Transaksi berhasil dicatat." }
+    const skippedItemsCount = saleData.items.length - validItems.length;
+    const message = skippedItemsCount > 0 
+        ? `Transaksi berhasil dicatat. ${skippedItemsCount} item diabaikan karena data tidak lengkap.`
+        : "Transaksi berhasil dicatat.";
+
+    return { success: true, message: message }
   } catch (error) {
     console.error("Error adding sale: ", error)
     const errorMessage = error instanceof Error ? error.message : "Gagal mencatat transaksi."
