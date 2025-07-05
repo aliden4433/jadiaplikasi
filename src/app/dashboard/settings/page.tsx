@@ -36,6 +36,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const discountFormSchema = z.object({
   discount: z.coerce
@@ -53,17 +54,19 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
   const { toast } = useToast()
   
-  const [defaultDiscount, setDefaultDiscount] = useState(0);
+  const [mounted, setMounted] = useState(false)
+  const [defaultDiscount, setDefaultDiscount] = useState(0)
 
   useEffect(() => {
-    const savedDiscount = localStorage.getItem("defaultDiscount");
+    setMounted(true)
+    const savedDiscount = localStorage.getItem("defaultDiscount")
     if (savedDiscount) {
-      const parsedDiscount = parseFloat(savedDiscount);
+      const parsedDiscount = parseFloat(savedDiscount)
       if (!isNaN(parsedDiscount)) {
-        setDefaultDiscount(parsedDiscount);
+        setDefaultDiscount(parsedDiscount)
       }
     }
-  }, []);
+  }, [])
 
   const discountForm = useForm<z.infer<typeof discountFormSchema>>({
     resolver: zodResolver(discountFormSchema),
@@ -81,12 +84,12 @@ export default function SettingsPage() {
   })
 
   useEffect(() => {
-    discountForm.reset({ discount: defaultDiscount });
-  }, [defaultDiscount, discountForm]);
+    discountForm.reset({ discount: defaultDiscount })
+  }, [defaultDiscount, discountForm])
 
   function onDiscountSubmit(values: z.infer<typeof discountFormSchema>) {
-    localStorage.setItem("defaultDiscount", values.discount.toString());
-    setDefaultDiscount(values.discount);
+    localStorage.setItem("defaultDiscount", values.discount.toString())
+    setDefaultDiscount(values.discount)
     toast({
       title: "Pengaturan Disimpan",
       description: `Diskon default telah diatur ke ${values.discount}%.`,
@@ -111,39 +114,47 @@ export default function SettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <RadioGroup
-            value={theme}
-            onValueChange={setTheme}
-            className="grid max-w-md grid-cols-1 gap-4 sm:grid-cols-3"
-          >
-              <div>
-                <Label className="cursor-pointer">
-                  <RadioGroupItem value="light" className="sr-only" />
-                  <div className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:border-primary data-[state=checked]:border-primary">
-                      <Sun className="h-6 w-6 mb-2" />
-                      Terang
-                  </div>
-                </Label>
-              </div>
-               <div>
-                <Label className="cursor-pointer">
-                  <RadioGroupItem value="dark" className="sr-only" />
-                  <div className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:border-primary data-[state=checked]:border-primary">
-                      <Moon className="h-6 w-6 mb-2" />
-                      Gelap
-                  </div>
-                </Label>
-              </div>
-               <div>
-                <Label className="cursor-pointer">
-                  <RadioGroupItem value="system" className="sr-only" />
-                  <div className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:border-primary data-[state=checked]:border-primary">
-                      <Monitor className="h-6 w-6 mb-2" />
-                      Sistem
-                  </div>
-                </Label>
-              </div>
-          </RadioGroup>
+          {!mounted ? (
+            <div className="grid max-w-md grid-cols-1 gap-4 sm:grid-cols-3">
+              <Skeleton className="h-[98px] w-full" />
+              <Skeleton className="h-[98px] w-full" />
+              <Skeleton className="h-[98px] w-full" />
+            </div>
+          ) : (
+            <RadioGroup
+              value={theme}
+              onValueChange={setTheme}
+              className="grid max-w-md grid-cols-1 gap-4 sm:grid-cols-3"
+            >
+                <div>
+                  <Label className="cursor-pointer">
+                    <RadioGroupItem value="light" className="sr-only" />
+                    <div className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:border-primary data-[state=checked]:border-primary">
+                        <Sun className="h-6 w-6 mb-2" />
+                        Terang
+                    </div>
+                  </Label>
+                </div>
+                 <div>
+                  <Label className="cursor-pointer">
+                    <RadioGroupItem value="dark" className="sr-only" />
+                    <div className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:border-primary data-[state=checked]:border-primary">
+                        <Moon className="h-6 w-6 mb-2" />
+                        Gelap
+                    </div>
+                  </Label>
+                </div>
+                 <div>
+                  <Label className="cursor-pointer">
+                    <RadioGroupItem value="system" className="sr-only" />
+                    <div className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:border-primary data-[state=checked]:border-primary">
+                        <Monitor className="h-6 w-6 mb-2" />
+                        Sistem
+                    </div>
+                  </Label>
+                </div>
+            </RadioGroup>
+          )}
         </CardContent>
       </Card>
       
