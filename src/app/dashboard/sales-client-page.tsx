@@ -22,6 +22,7 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -29,6 +30,7 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile"
 import { SalesImportButton } from "./sales/sales-import-button"
 import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
 
 interface SalesClientPageProps {
   products: Product[]
@@ -66,9 +68,30 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
 
 
   const addToCart = (product: Product, showToast = true) => {
+    // This check is now redundant because of the UI disabling, but good for safety
+    if (product.stock <= 0) {
+      toast({
+        variant: "destructive",
+        title: "Stok Habis",
+        description: `${product.name} sedang tidak tersedia.`,
+      })
+      return
+    }
+
+    const existingItem = cart.find((item) => item.product.id === product.id)
+    
+    if (existingItem && existingItem.quantity >= product.stock) {
+      toast({
+        variant: "destructive",
+        title: "Stok Tidak Cukup",
+        description: `Anda sudah memiliki semua ${product.stock} unit ${product.name} yang tersedia di keranjang.`,
+      })
+      return
+    }
+
     setCart((prevCart) => {
-      const existingItem = prevCart.find((item) => item.product.id === product.id)
-      if (existingItem) {
+      const itemInCart = prevCart.find((item) => item.product.id === product.id)
+      if (itemInCart) {
         return prevCart.map((item) =>
           item.product.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
@@ -77,6 +100,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
       }
       return [...prevCart, { product, quantity: 1, price: product.price }]
     })
+
     if (showToast) {
       toast({
         title: "Produk Ditambahkan",
@@ -96,6 +120,28 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
   }
 
   const updateQuantity = (productId: string, quantity: number) => {
+    const itemToUpdate = cart.find((item) => item.product.id === productId);
+    if (!itemToUpdate) return;
+    
+    // Find the master product from the initial props to get the authoritative stock count
+    const masterProduct = products.find(p => p.id === productId);
+    if (!masterProduct) return; // Should not happen if item is in cart
+
+    if (quantity > masterProduct.stock) {
+      toast({
+        variant: "destructive",
+        title: "Stok Tidak Cukup",
+        description: `Hanya ada ${masterProduct.stock} unit ${masterProduct.name} yang tersisa.`,
+      });
+      // Cap the quantity at max stock instead of just returning
+      setCart((prevCart) =>
+        prevCart.map((item) =>
+          item.product.id === productId ? { ...item, quantity: masterProduct.stock } : item
+        )
+      );
+      return;
+    }
+
     if (quantity < 1) {
       removeFromCart(productId)
     } else {
@@ -357,15 +403,24 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
           {filteredAndSortedProducts.map((product) => (
             <Card
               key={product.id}
-              className="flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-200"
-              onClick={() => addToCart(product)}
+              className={cn(
+                "flex flex-col transition-shadow duration-200 relative",
+                product.stock > 0 ? "cursor-pointer hover:shadow-lg" : "opacity-50"
+              )}
+              onClick={() => product.stock > 0 && addToCart(product)}
             >
-              <div className="p-3 flex flex-col flex-grow justify-between">
-                  <p className="font-semibold text-sm line-clamp-3">{product.name}</p>
-                  <p className="text-sm text-muted-foreground mt-2 self-end font-medium">
-                      {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
+              {product.stock <= 0 && (
+                <Badge variant="destructive" className="absolute top-2 right-2 z-10">Habis</Badge>
+              )}
+              <CardContent className="p-3 flex flex-col flex-grow justify-between">
+                <p className="font-semibold text-sm line-clamp-3 pr-4">{product.name}</p>
+                <div className="flex justify-between items-baseline mt-2">
+                  <span className="text-xs text-muted-foreground">Stok: {product.stock}</span>
+                  <p className="text-sm text-foreground font-medium">
+                    {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
                   </p>
-              </div>
+                </div>
+              </CardContent>
             </Card>
           ))}
         </CardContent>
@@ -377,6 +432,9 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
           <SheetContent side="bottom" className="w-full p-0 flex flex-col h-screen">
             <SheetHeader className="p-4 pb-2">
               <SheetTitle>Pesanan Saat Ini</SheetTitle>
+              <SheetDescription className="sr-only">
+                Kelola item di keranjang Anda sebelum menyelesaikan transaksi.
+              </SheetDescription>
             </SheetHeader>
             {CartItems}
             {CartSummary}
