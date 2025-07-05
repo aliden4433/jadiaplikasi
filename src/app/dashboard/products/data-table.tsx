@@ -89,19 +89,19 @@ export function DataTable<TData, TValue>({
                              <ProductRowActions product={product} />
                            </div>
                          </div>
-                         <div className="text-sm text-muted-foreground grid grid-cols-2 gap-x-4 gap-y-2">
-                             <div>
-                                 <p className="text-xs">Harga Jual</p>
-                                 <p className="font-medium text-foreground">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}</p>
-                             </div>
-                             <div className="text-right">
-                                 <p className="text-xs">Stok</p>
-                                 <p className="font-medium text-foreground">{product.stock}</p>
-                             </div>
-                             <div>
-                                 <p className="text-xs">Harga Modal</p>
-                                 <p className="font-medium text-foreground">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.costPrice)}</p>
-                             </div>
+                         <div className="text-sm text-muted-foreground space-y-1">
+                            <div className="flex justify-between">
+                                <span>Harga Jual</span>
+                                <span className="font-medium text-foreground">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span>Harga Modal</span>
+                                <span className="font-medium text-foreground">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.costPrice)}</span>
+                            </div>
+                             <div className="flex justify-between">
+                                <span>Stok</span>
+                                <span className="font-medium text-foreground">{product.stock}</span>
+                            </div>
                          </div>
                       </div>
                     </CardContent>
