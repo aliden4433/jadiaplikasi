@@ -2,7 +2,8 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Trash2, ShoppingCart, Loader2 } from "lucide-react"
+import { Trash2, ShoppingCart, Loader2, Calendar as CalendarIcon } from "lucide-react"
+import { format } from "date-fns"
 
 import { addSale } from "./sales/actions"
 import type { CartItem, Product } from "@/lib/types"
@@ -33,6 +34,7 @@ import { SalesImportButton } from "./sales/sales-import-button"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { Slider } from "@/components/ui/slider"
+import { Calendar } from "@/components/ui/calendar"
 
 interface SalesClientPageProps {
   products: Product[]
@@ -41,6 +43,7 @@ interface SalesClientPageProps {
 export function SalesClientPage({ products }: SalesClientPageProps) {
   const [cart, setCart] = useState<CartItem[]>([])
   const [discount, setDiscount] = useState(0) // Percentage
+  const [transactionDate, setTransactionDate] = useState<Date>(new Date())
   const [isProcessing, setIsProcessing] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [sortOrder, setSortOrder] = useState("name-asc")
@@ -147,6 +150,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
     const saleData = {
       items: cart,
       discountPercentage: discount,
+      transactionDate: transactionDate.toISOString(),
     }
 
     try {
@@ -158,6 +162,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
         })
         setCart([])
         setDiscount(0)
+        setTransactionDate(new Date())
       } else {
         toast({
           variant: "destructive",
@@ -247,7 +252,32 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
       {cart.length > 0 && (
         <>
           <Separator />
-          <div className="p-4 space-y-2">
+          <div className="p-4 space-y-4">
+            <div className="flex justify-between items-center">
+              <p>Tanggal Transaksi</p>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant={"outline"}
+                            className={cn(
+                                "w-auto justify-start text-left font-normal",
+                                !transactionDate && "text-muted-foreground"
+                            )}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {transactionDate ? format(transactionDate, "dd MMM yyyy") : <span>Pilih tanggal</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="end">
+                        <Calendar
+                            mode="single"
+                            selected={transactionDate}
+                            onSelect={(date) => setTransactionDate(date || new Date())}
+                            initialFocus
+                        />
+                    </PopoverContent>
+                </Popover>
+            </div>
             <div className="flex justify-between">
               <p>Subtotal</p>
               <p>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(subtotal)}</p>
@@ -270,7 +300,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
                        <Slider
                           defaultValue={[discount]}
                           max={100}
-                          step={1}
+                          step={0.5}
                           onValueChange={(value) => setDiscount(value[0])}
                         />
                       <Input
@@ -280,6 +310,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
                         className="w-full h-8"
                         min="0"
                         max="100"
+                        step="0.5"
                       />
                     </div>
                   </div>
@@ -380,20 +411,18 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
                   className="w-full text-left p-4 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-inset transition-colors"
                   aria-label={`Tambahkan ${product.name} ke keranjang`}
                 >
-                  <div className="flex justify-between items-start">
-                    <p className="font-medium text-sm truncate pr-4">{product.name}</p>
-                    <p className="font-semibold text-sm text-foreground flex-shrink-0 hidden md:block">
-                      {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-start md:flex-row md:justify-between md:items-baseline mt-1">
-                    <p className="text-xs text-muted-foreground">
+                  <p className="font-medium text-sm truncate pr-4">{product.name}</p>
+                  <div className="flex flex-col items-start mt-1 text-xs text-muted-foreground">
+                    <p>
                       Stok: {product.stock}
                     </p>
-                    <p className="font-semibold text-sm text-foreground block md:hidden">
-                      {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
+                    <p className="font-semibold text-foreground text-sm md:hidden">
+                        {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
                     </p>
                   </div>
+                  <p className="font-semibold text-sm text-foreground flex-shrink-0 hidden md:block">
+                    {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
+                  </p>
                 </button>
               ))
             ) : (
@@ -426,7 +455,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
             <CardHeader className="p-4">
               <CardTitle>Pesanan Saat Ini</CardTitle>
             </CardHeader>
-            <div className="flex-grow overflow-y-auto max-h-[calc(80vh-180px)]">
+            <div className="flex-grow overflow-y-auto max-h-[calc(80vh-220px)]">
                 {CartItems}
             </div>
             {CartSummary}

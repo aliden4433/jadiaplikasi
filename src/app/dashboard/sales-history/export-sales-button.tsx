@@ -35,7 +35,7 @@ export function ExportSalesButton({ sales, disabled }: ExportSalesButtonProps) {
     const data = sales.map((sale) => {
       const labaKotor = sale.subtotal - sale.totalCost
       return [
-        sale.id,
+        sale.transactionId || sale.id,
         format(new Date(sale.date), "M/d/yyyy"),
         "UTM", // Placeholder
         "PL0001", // Placeholder

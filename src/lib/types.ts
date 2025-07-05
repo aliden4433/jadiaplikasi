@@ -23,6 +23,7 @@ export type SaleItem = {
 
 export type Sale = {
   id: string
+  transactionId: string
   items: SaleItem[]
   subtotal: number
   discount: number

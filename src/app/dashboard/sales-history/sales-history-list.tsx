@@ -181,10 +181,10 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
                       <div className="flex justify-between items-center w-full pr-4">
                         <div className="text-left">
                           <p className="font-semibold">
-                            {format(new Date(sale.date), "d MMM yyyy, HH:mm", { locale: id })}
+                            {sale.transactionId || 'No ID'}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            {sale.items.length} jenis produk
+                            {format(new Date(sale.date), "d MMM yyyy, HH:mm", { locale: id })}
                           </p>
                         </div>
                         <div className="flex items-center gap-2">

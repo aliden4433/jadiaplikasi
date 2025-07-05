@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { collection, doc, runTransaction, writeBatch } from 'firebase/firestore';
+import { collection, doc, runTransaction } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Product, CartItem } from '@/lib/types';
 import {
@@ -128,16 +128,15 @@ export async function addOrUpdateProductsAndGetCartItems(
 export async function addSale(saleData: {
   items: CartItem[]
   discountPercentage: number
+  transactionDate: string
 }) {
   try {
-    // 1. Filter out items that don't have a product or product ID to prevent crashes.
     const validItems = saleData.items.filter(item => item.product && item.product.id);
     
     if (validItems.length === 0) {
       throw new Error("Tidak ada item yang valid di keranjang untuk diproses.");
     }
     
-    // 2. Recalculate totals on the server based on valid items to ensure data integrity.
     const subtotal = validItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
     const discountAmount = subtotal * (saleData.discountPercentage / 100);
     const total = subtotal - discountAmount;
@@ -145,16 +144,25 @@ export async function addSale(saleData: {
     const profit = total - totalCost;
 
     await runTransaction(db, async (transaction) => {
-      // Step 1: READ all product documents first.
+      // 1. Get and increment the sales counter
+      const counterRef = doc(db, "counters", "sales");
+      const counterDoc = await transaction.get(counterRef);
+      
+      const currentCount = counterDoc.exists() ? counterDoc.data().count : 0;
+      const newCount = currentCount + 1;
+      const newTransactionId = `TRX-${String(newCount).padStart(5, '0')}`;
+      
+      // 2. READ all product documents first.
       const productRefs = validItems.map(item => doc(db, "products", item.product.id!));
       const productDocs = await Promise.all(productRefs.map(ref => transaction.get(ref)));
 
-      // Step 2: Now perform all WRITE operations.
+      // 3. Now perform all WRITE operations.
       // First, create the sale document.
       const salesCol = collection(db, "sales");
       const saleRef = doc(salesCol);
       
       const saleToSave = {
+        transactionId: newTransactionId,
         items: validItems.map(item => ({
           productId: item.product.id!,
           productName: item.product.name,
@@ -167,7 +175,7 @@ export async function addSale(saleData: {
         total,
         totalCost,
         profit,
-        date: new Date().toISOString(),
+        date: saleData.transactionDate,
       };
       transaction.set(saleRef, saleToSave);
 
@@ -186,11 +194,15 @@ export async function addSale(saleData: {
 
         transaction.update(productRef, { stock: newStock });
       }
+
+      // Finally, update the counter
+      transaction.set(counterRef, { count: newCount }, { merge: true });
     });
     
     revalidatePath("/dashboard/products")
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/reports")
+    revalidatePath("/dashboard/sales-history")
 
     const skippedItemsCount = saleData.items.length - validItems.length;
     const message = skippedItemsCount > 0 
