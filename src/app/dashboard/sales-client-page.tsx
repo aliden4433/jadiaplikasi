@@ -5,7 +5,7 @@ import { Trash2, ShoppingCart, Loader2, Calendar as CalendarIcon } from "lucide-
 import { format } from "date-fns"
 
 import { addSale } from "./sales/actions"
-import type { CartItem, Product } from "@/lib/types"
+import type { CartItem, Product, Sale } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -36,6 +36,7 @@ import { Calendar } from "@/components/ui/calendar"
 
 interface SalesClientPageProps {
   products: Product[]
+  sales: Sale[]
 }
 
 const getInitialDiscount = () => {
@@ -46,7 +47,7 @@ const getInitialDiscount = () => {
     return savedDiscount ? parseFloat(savedDiscount) : 0;
 };
 
-export function SalesClientPage({ products }: SalesClientPageProps) {
+export function SalesClientPage({ products, sales }: SalesClientPageProps) {
   const [cart, setCart] = useState<CartItem[]>([])
   const [discount, setDiscount] = useState(0) // Percentage
   const [transactionDate, setTransactionDate] = useState<Date>(new Date())
@@ -60,6 +61,19 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
   useEffect(() => {
     setDiscount(getInitialDiscount());
   }, []);
+
+  const salesCount = useMemo(() => {
+    const counts: { [key: string]: number } = {};
+    if (!sales) return counts;
+    sales.forEach(sale => {
+      sale.items.forEach(item => {
+        if (item.productId) {
+          counts[item.productId] = (counts[item.productId] || 0) + item.quantity;
+        }
+      });
+    });
+    return counts;
+  }, [sales]);
 
   const filteredAndSortedProducts = useMemo(() => {
     return products
@@ -76,11 +90,13 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
             return a.price - b.price
           case "price-desc":
             return b.price - a.price
+          case "bestsellers":
+            return (salesCount[b.id!] || 0) - (salesCount[a.id!] || 0)
           default:
-            return 0
+            return a.name.localeCompare(b.name)
         }
       })
-  }, [products, searchTerm, sortOrder])
+  }, [products, searchTerm, sortOrder, salesCount])
 
 
   const addToCart = (product: Product, quantity: number = 1, showToast = true) => {
@@ -340,6 +356,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
                             <SelectItem value="name-desc">Nama (Z-A)</SelectItem>
                             <SelectItem value="price-asc">Harga (Rendah ke Tinggi)</SelectItem>
                             <SelectItem value="price-desc">Harga (Tinggi ke Rendah)</SelectItem>
+                             <SelectItem value="bestsellers">Produk Terlaris</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -354,7 +371,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
   }
 
   return (
-    <div className="relative min-h-[calc(100vh-8rem)]">
+    <div className="grid md:grid-cols-[1fr_400px] gap-8 items-start">
       <Card className="flex flex-col h-full">
         <CardHeader>
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -372,10 +389,11 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
                     <SelectValue placeholder="Urutkan" />
                     </SelectTrigger>
                     <SelectContent>
-                    <SelectItem value="name-asc">Nama (A-Z)</SelectItem>
-                    <SelectItem value="name-desc">Nama (Z-A)</SelectItem>
-                    <SelectItem value="price-asc">Harga (Rendah ke Tinggi)</SelectItem>
-                    <SelectItem value="price-desc">Harga (Tinggi ke Rendah)</SelectItem>
+                        <SelectItem value="name-asc">Nama (A-Z)</SelectItem>
+                        <SelectItem value="name-desc">Nama (Z-A)</SelectItem>
+                        <SelectItem value="price-asc">Harga (Rendah ke Tinggi)</SelectItem>
+                        <SelectItem value="price-desc">Harga (Tinggi ke Rendah)</SelectItem>
+                        <SelectItem value="bestsellers">Produk Terlaris</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -391,22 +409,16 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
                   className="w-full text-left p-4 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-inset transition-colors"
                   aria-label={`Tambahkan ${product.name} ke keranjang`}
                 >
-                  <p className="font-medium text-sm truncate pr-4">{product.name}</p>
-                  <div className="text-xs text-muted-foreground mt-1 space-y-1 md:hidden">
-                    <p>
-                      Stok: {product.stock}
-                    </p>
-                    <p className="font-semibold text-foreground text-sm">
-                        {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
-                    </p>
-                  </div>
-                   <div className="hidden md:flex justify-between items-center mt-1 text-xs text-muted-foreground">
-                     <p>
-                      Stok: {product.stock}
-                    </p>
-                     <p className="font-semibold text-sm text-foreground flex-shrink-0">
-                        {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
-                    </p>
+                    <div className="flex justify-between items-start">
+                        <p className="font-medium text-sm truncate pr-4">{product.name}</p>
+                        <p className="font-semibold text-sm text-foreground flex-shrink-0">
+                            {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
+                        </p>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1 space-y-1">
+                        <p>
+                        Stok: {product.stock}
+                        </p>
                   </div>
                 </button>
               ))
@@ -419,34 +431,18 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
         </CardContent>
       </Card>
       
-      {isMobile ? (
-        <Sheet>
-          <SheetTrigger asChild>{CartTrigger}</SheetTrigger>
-          <SheetContent side="bottom" className="w-full p-0 flex flex-col h-screen">
-             <SheetHeader className="p-4 pb-2">
-               <SheetTitle>Pesanan Saat Ini</SheetTitle>
-               <SheetDescription className="sr-only">
-                 Kelola item di keranjang Anda sebelum menyelesaikan transaksi.
-               </SheetDescription>
-             </SheetHeader>
-            {CartItems}
-            {CartSummary}
-          </SheetContent>
-        </Sheet>
-      ) : (
-        <Popover>
-          <PopoverTrigger asChild>{CartTrigger}</PopoverTrigger>
-          <PopoverContent className="w-[480px] mr-4 mb-2 p-0 flex flex-col max-h-[80vh]" side="top" align="end">
-            <CardHeader className="p-4">
-              <CardTitle>Pesanan Saat Ini</CardTitle>
-            </CardHeader>
-            <div className="flex-grow overflow-y-auto max-h-[calc(80vh-220px)]">
+      <Card className="sticky top-6">
+        <CardHeader>
+            <CardTitle>Pesanan Saat Ini</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+            <div className="max-h-[calc(100vh-320px)] overflow-y-auto">
                 {CartItems}
             </div>
-            {CartSummary}
-          </PopoverContent>
-        </Popover>
-      )}
+        </CardContent>
+        {CartSummary}
+      </Card>
+
     </div>
   )
 }
