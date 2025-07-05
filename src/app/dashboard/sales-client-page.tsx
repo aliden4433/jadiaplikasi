@@ -1,8 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import Image from "next/image"
-import { PlusCircle, Trash2 } from "lucide-react"
+import { Package, PlusCircle, Trash2 } from "lucide-react"
 
 import type { CartItem, Product } from "@/lib/types"
 import { Button } from "@/components/ui/button"
@@ -18,7 +17,7 @@ interface SalesClientPageProps {
 
 export function SalesClientPage({ products }: SalesClientPageProps) {
   const [cart, setCart] = useState<CartItem[]>([])
-  const [discount, setDiscount] = useState(0)
+  const [discount, setDiscount] = useState(0) // Percentage
   const [isPaymentDialogOpen, setPaymentDialogOpen] = useState(false)
   const { toast } = useToast()
 
@@ -53,7 +52,8 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
   }
 
   const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0)
-  const total = subtotal - discount
+  const discountAmount = subtotal * (discount / 100)
+  const total = subtotal - discountAmount
 
   const handlePaymentSuccess = () => {
     setPaymentDialogOpen(false)
@@ -63,6 +63,15 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
     })
     setCart([])
     setDiscount(0)
+  }
+
+  const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value)
+    if (isNaN(value)) {
+      setDiscount(0)
+    } else {
+      setDiscount(Math.max(0, Math.min(100, value)))
+    }
   }
 
   return (
@@ -76,14 +85,9 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
             {products.map((product) => (
               <Card key={product.id} className="flex flex-col">
                 <CardContent className="p-2 flex-grow">
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    width={150}
-                    height={150}
-                    className="w-full h-auto aspect-square object-cover rounded-md"
-                    data-ai-hint={`${product.category} ${product.name}`}
-                  />
+                   <div className="aspect-square w-full bg-secondary rounded-md flex items-center justify-center">
+                    <Package className="w-1/2 h-1/2 text-muted-foreground" />
+                  </div>
                 </CardContent>
                 <CardFooter className="flex flex-col items-start p-2 pt-0">
                   <p className="font-semibold text-sm">{product.name}</p>
@@ -118,14 +122,9 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
                 {cart.map((item) => (
                   <div key={item.product.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Image
-                        src={item.product.image}
-                        alt={item.product.name}
-                        width={40}
-                        height={40}
-                        className="rounded-md"
-                        data-ai-hint={`${item.product.category} ${item.product.name}`}
-                      />
+                      <div className="w-10 h-10 bg-secondary rounded-md flex items-center justify-center flex-shrink-0">
+                        <Package className="w-6 h-6 text-muted-foreground" />
+                      </div>
                       <div>
                         <p className="font-medium">{item.product.name}</p>
                         <p className="text-sm text-muted-foreground">
@@ -161,15 +160,23 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
                 <div className="flex justify-between items-center">
                   <p>Diskon</p>
                   <div className="flex items-center gap-2">
-                    <span>Rp</span>
                     <Input
                       type="number"
                       value={discount}
-                      onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
-                      className="w-24 h-8"
+                      onChange={handleDiscountChange}
+                      className="w-20 h-8 text-right"
+                      min="0"
+                      max="100"
                     />
+                    <span>%</span>
                   </div>
                 </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <p>Potongan Diskon</p>
+                    <p>-{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(discountAmount)}</p>
+                  </div>
+                )}
                 <Separator />
                 <div className="flex justify-between font-bold text-lg">
                   <p>Total</p>
@@ -177,7 +184,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full" onClick={() => setPaymentDialogOpen(true)} disabled={total <= 0}>
+                <Button className="w-full" onClick={() => setPaymentDialogOpen(true)} disabled={total < 0}>
                   Proses Pembayaran
                 </Button>
               </CardFooter>

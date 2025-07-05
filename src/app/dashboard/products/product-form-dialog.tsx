@@ -36,7 +36,6 @@ const formSchema = z.object({
   category: z.string().min(1, "Kategori tidak boleh kosong."),
   price: z.coerce.number().min(0, "Harga harus angka positif."),
   stock: z.coerce.number().int().min(0, "Stok harus bilangan bulat positif."),
-  image: z.string().url("URL gambar tidak valid.").min(1, "URL gambar tidak boleh kosong."),
 })
 
 interface ProductFormDialogProps {
@@ -63,7 +62,6 @@ export function ProductFormDialog({ product, children, open: openProp, onOpenCha
       category: "",
       price: 0,
       stock: 0,
-      image: "https://placehold.co/150x150.png",
     },
   })
   
@@ -78,7 +76,6 @@ export function ProductFormDialog({ product, children, open: openProp, onOpenCha
           category: "",
           price: 0,
           stock: 0,
-          image: "https://placehold.co/150x150.png",
         });
       }
     }
@@ -88,10 +85,17 @@ export function ProductFormDialog({ product, children, open: openProp, onOpenCha
     setIsLoading(true)
     try {
       let result;
+      const productData = {
+        name: values.name,
+        description: values.description,
+        category: values.category,
+        price: values.price,
+        stock: values.stock,
+      }
       if (isEditMode && product?.id) {
-        result = await updateProduct(product.id, values)
+        result = await updateProduct(product.id, productData)
       } else {
-        result = await addProduct(values)
+        result = await addProduct(productData)
       }
 
       if (result.success) {
@@ -186,19 +190,6 @@ export function ProductFormDialog({ product, children, open: openProp, onOpenCha
                   <FormLabel>Stok</FormLabel>
                   <FormControl>
                     <Input type="number" placeholder="0" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="image"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>URL Gambar</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://placehold.co/150x150.png" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
