@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Package, Trash2, ShoppingCart } from "lucide-react"
 
 import type { CartItem, Product } from "@/lib/types"
@@ -12,6 +12,13 @@ import { useToast } from "@/hooks/use-toast"
 import { PaymentDialog } from "@/components/payment-dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Badge } from "@/components/ui/badge"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Sheet,
   SheetContent,
@@ -29,8 +36,32 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
   const [cart, setCart] = useState<CartItem[]>([])
   const [discount, setDiscount] = useState(0) // Percentage
   const [isPaymentDialogOpen, setPaymentDialogOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [sortOrder, setSortOrder] = useState("name-asc")
   const { toast } = useToast()
   const isMobile = useIsMobile()
+
+  const filteredAndSortedProducts = useMemo(() => {
+    return products
+      .filter((product) =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      .sort((a, b) => {
+        switch (sortOrder) {
+          case "name-asc":
+            return a.name.localeCompare(b.name)
+          case "name-desc":
+            return b.name.localeCompare(a.name)
+          case "price-asc":
+            return a.price - b.price
+          case "price-desc":
+            return b.price - a.price
+          default:
+            return 0
+        }
+      })
+  }, [products, searchTerm, sortOrder])
+
 
   const addToCart = (product: Product) => {
     setCart((prevCart) => {
@@ -196,7 +227,23 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
        <div className="relative min-h-[calc(100vh-8rem)]">
         <Card>
           <CardHeader>
-            <CardTitle>Produk</CardTitle>
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <CardTitle>Produk</CardTitle>
+                <div className="flex items-center gap-2 w-full md:w-auto">
+                    <Input placeholder="Cari produk..." className="w-full md:w-64" />
+                    <Select>
+                        <SelectTrigger className="w-full md:w-[220px]">
+                            <SelectValue placeholder="Urutkan" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="name-asc">Nama (A-Z)</SelectItem>
+                            <SelectItem value="name-desc">Nama (Z-A)</SelectItem>
+                            <SelectItem value="price-asc">Harga (Rendah ke Tinggi)</SelectItem>
+                            <SelectItem value="price-desc">Harga (Tinggi ke Rendah)</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
           </CardHeader>
           <CardContent className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {/* Products rendered here to avoid layout shift */}
@@ -210,10 +257,31 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
     <div className="relative min-h-[calc(100vh-8rem)]">
       <Card>
         <CardHeader>
-          <CardTitle>Produk</CardTitle>
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <CardTitle>Produk</CardTitle>
+            <div className="flex items-center gap-2 w-full md:w-auto">
+                <Input
+                    placeholder="Cari produk..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full md:w-64"
+                />
+                <Select value={sortOrder} onValueChange={setSortOrder}>
+                    <SelectTrigger className="w-full md:w-[220px]">
+                    <SelectValue placeholder="Urutkan" />
+                    </SelectTrigger>
+                    <SelectContent>
+                    <SelectItem value="name-asc">Nama (A-Z)</SelectItem>
+                    <SelectItem value="name-desc">Nama (Z-A)</SelectItem>
+                    <SelectItem value="price-asc">Harga (Rendah ke Tinggi)</SelectItem>
+                    <SelectItem value="price-desc">Harga (Tinggi ke Rendah)</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {products.map((product) => (
+          {filteredAndSortedProducts.map((product) => (
             <Card
               key={product.id}
               className="flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-200"
