@@ -1,8 +1,9 @@
 'use server';
 
-import { collection, query, where, getDocs, writeBatch, doc } from 'firebase/firestore';
+import { revalidatePath } from 'next/cache';
+import { collection, doc, runTransaction } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { Product } from '@/lib/types';
+import type { Product, CartItem } from '@/lib/types';
 import {
   extractProducts as extractProductsFromPdfFlow,
 } from '@/ai/flows/extract-products-from-pdf-flow';
@@ -76,4 +77,62 @@ export async function processSalesPdf(pdfDataUri: string): Promise<ProcessedPdfR
     newProductsCount: productsToCreate.length,
     existingProductsCount: existingProductsCount,
   };
+}
+
+
+export async function addSale(saleData: {
+  items: CartItem[]
+  subtotal: number
+  discountAmount: number
+  total: number
+}) {
+  try {
+    await runTransaction(db, async (transaction) => {
+      const salesCol = collection(db, "sales")
+      const saleRef = doc(salesCol)
+      
+      const saleToSave = {
+        items: saleData.items.map(item => ({
+          productId: item.product.id!,
+          productName: item.product.name,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        subtotal: saleData.subtotal,
+        discount: saleData.discountAmount,
+        total: saleData.total,
+        date: new Date().toISOString(),
+      }
+      transaction.set(saleRef, saleToSave)
+
+      for (const item of saleData.items) {
+        if (!item.product.id) continue
+        const productRef = doc(db, "products", item.product.id)
+        const productDoc = await transaction.get(productRef)
+
+        if (!productDoc.exists()) {
+          throw new Error(`Produk "${item.product.name}" tidak ditemukan.`)
+        }
+
+        const currentStock = productDoc.data().stock
+        const newStock = currentStock - item.quantity
+
+        if (newStock < 0) {
+          throw new Error(`Stok untuk "${item.product.name}" tidak mencukupi.`)
+        }
+
+        transaction.update(productRef, { stock: newStock })
+      }
+    })
+    
+    revalidatePath("/dashboard/products")
+    revalidatePath("/dashboard")
+    revalidatePath("/dashboard/reports")
+
+    return { success: true, message: "Transaksi berhasil dicatat." }
+  } catch (error) {
+    console.error("Error adding sale: ", error)
+    const errorMessage = error instanceof Error ? error.message : "Gagal mencatat transaksi."
+    return { success: false, message: errorMessage }
+  }
 }

@@ -1,15 +1,15 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Package, Trash2, ShoppingCart } from "lucide-react"
+import { Package, Trash2, ShoppingCart, Loader2 } from "lucide-react"
 
+import { addSale } from "./sales/actions"
 import type { CartItem, Product } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
-import { PaymentDialog } from "@/components/payment-dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -37,7 +37,7 @@ interface SalesClientPageProps {
 export function SalesClientPage({ products }: SalesClientPageProps) {
   const [cart, setCart] = useState<CartItem[]>([])
   const [discount, setDiscount] = useState(0) // Percentage
-  const [isPaymentDialogOpen, setPaymentDialogOpen] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [sortOrder, setSortOrder] = useState("name-asc")
   const { toast } = useToast()
@@ -126,22 +126,58 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
   const total = subtotal - discountAmount
   const totalItemsInCart = cart.reduce((acc, item) => acc + item.quantity, 0)
 
-  const handlePaymentSuccess = () => {
-    setPaymentDialogOpen(false)
-    toast({
-      title: "Pembayaran Berhasil",
-      description: "Transaksi telah berhasil diselesaikan.",
-    })
-    setCart([])
-    setDiscount(0)
-  }
-
   const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value)
     if (isNaN(value)) {
       setDiscount(0)
     } else {
       setDiscount(Math.max(0, Math.min(100, value)))
+    }
+  }
+
+  async function handleProcessSale() {
+    if (cart.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Keranjang Kosong",
+        description: "Tidak ada item untuk diproses.",
+      })
+      return
+    }
+
+    setIsProcessing(true)
+
+    const saleData = {
+      items: cart,
+      subtotal,
+      discountAmount,
+      total,
+    }
+
+    try {
+      const result = await addSale(saleData)
+      if (result.success) {
+        toast({
+          title: "Transaksi Berhasil",
+          description: result.message,
+        })
+        setCart([])
+        setDiscount(0)
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error Transaksi",
+          description: result.message,
+        })
+      }
+    } catch (error) {
+       toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Terjadi kesalahan yang tidak terduga saat memproses transaksi.",
+      })
+    } finally {
+      setIsProcessing(false)
     }
   }
 
@@ -248,8 +284,11 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
             </div>
           </div>
           <CardFooter className="p-4 pt-0">
-            <Button className="w-full" onClick={() => setPaymentDialogOpen(true)} disabled={total <= 0}>
-              Proses Pembayaran
+            <Button className="w-full" onClick={handleProcessSale} disabled={total <= 0 || isProcessing}>
+              {isProcessing ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              {isProcessing ? "Memproses..." : "Catat Transaksi"}
             </Button>
           </CardFooter>
         </>
@@ -359,13 +398,6 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
           </PopoverContent>
         </Popover>
       )}
-
-      <PaymentDialog
-        open={isPaymentDialogOpen}
-        onOpenChange={setPaymentDialogOpen}
-        total={total}
-        onPaymentSuccess={handlePaymentSuccess}
-      />
     </div>
   )
 }
