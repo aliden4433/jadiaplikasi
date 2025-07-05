@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Package, PlusCircle, Trash2 } from "lucide-react"
+import { Package, PlusCircle, Trash2, ShoppingCart } from "lucide-react"
 
 import type { CartItem, Product } from "@/lib/types"
 import { Button } from "@/components/ui/button"
@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { PaymentDialog } from "@/components/payment-dialog"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Badge } from "@/components/ui/badge"
 
 interface SalesClientPageProps {
   products: Product[]
@@ -33,6 +35,10 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
       }
       return [...prevCart, { product, quantity: 1 }]
     })
+    toast({
+      title: "Produk Ditambahkan",
+      description: `${product.name} telah ditambahkan ke keranjang.`,
+    })
   }
 
   const updateQuantity = (productId: string, quantity: number) => {
@@ -54,6 +60,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
   const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0)
   const discountAmount = subtotal * (discount / 100)
   const total = subtotal - discountAmount
+  const totalItemsInCart = cart.reduce((acc, item) => acc + item.quantity, 0)
 
   const handlePaymentSuccess = () => {
     setPaymentDialogOpen(false)
@@ -75,46 +82,54 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-      <div className="lg:col-span-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Produk</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {products.map((product) => (
-              <Card key={product.id} className="flex flex-col">
-                <CardContent className="p-2 flex-grow">
-                   <div className="aspect-square w-full bg-secondary rounded-md flex items-center justify-center">
-                    <Package className="w-1/2 h-1/2 text-muted-foreground" />
-                  </div>
-                </CardContent>
-                <CardFooter className="flex flex-col items-start p-2 pt-0">
-                  <p className="font-semibold text-sm">{product.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full mt-2"
-                    onClick={() => addToCart(product)}
-                  >
-                    <PlusCircle className="mr-2 h-4 w-4" /> Tambah
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div>
-        <Card>
-          <CardHeader>
+    <div className="relative min-h-[calc(100vh-8rem)]">
+      <Card>
+        <CardHeader>
+          <CardTitle>Produk</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {products.map((product) => (
+            <Card 
+              key={product.id} 
+              className="flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-200"
+              onClick={() => addToCart(product)}
+            >
+              <CardContent className="p-2 flex-grow">
+                  <div className="aspect-square w-full bg-secondary rounded-md flex items-center justify-center">
+                  <Package className="w-1/2 h-1/2 text-muted-foreground" />
+                </div>
+              </CardContent>
+              <CardFooter className="flex flex-col items-start p-2 pt-0">
+                <p className="font-semibold text-sm">{product.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
+                </p>
+              </CardFooter>
+            </Card>
+          ))}
+        </CardContent>
+      </Card>
+      
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            className="fixed bottom-8 right-8 rounded-full h-16 w-16 shadow-lg z-20"
+            size="icon"
+          >
+            <ShoppingCart className="h-7 w-7" />
+            <span className="sr-only">Keranjang Belanja</span>
+            {totalItemsInCart > 0 && (
+              <Badge className="absolute -top-2 -right-2 h-6 w-6 flex items-center justify-center rounded-full">
+                {totalItemsInCart}
+              </Badge>
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-96 mr-4 mb-2" side="top" align="end">
+          <CardHeader className="p-4">
             <CardTitle>Pesanan Saat Ini</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 max-h-96 overflow-y-auto">
             {cart.length === 0 ? (
               <p className="text-muted-foreground">Tidak ada item di keranjang.</p>
             ) : (
@@ -152,7 +167,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
           {cart.length > 0 && (
             <>
               <Separator />
-              <CardContent className="space-y-2 pt-6">
+              <CardContent className="p-4 space-y-2">
                 <div className="flex justify-between">
                   <p>Subtotal</p>
                   <p>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(subtotal)}</p>
@@ -183,15 +198,16 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
                   <p>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(total)}</p>
                 </div>
               </CardContent>
-              <CardFooter>
-                <Button className="w-full" onClick={() => setPaymentDialogOpen(true)} disabled={total < 0}>
+              <CardFooter className="p-4 pt-0">
+                <Button className="w-full" onClick={() => setPaymentDialogOpen(true)} disabled={total <= 0}>
                   Proses Pembayaran
                 </Button>
               </CardFooter>
             </>
           )}
-        </Card>
-      </div>
+        </PopoverContent>
+      </Popover>
+
       <PaymentDialog
         open={isPaymentDialogOpen}
         onOpenChange={setPaymentDialogOpen}
