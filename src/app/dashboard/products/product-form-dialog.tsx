@@ -33,8 +33,8 @@ import type { Product } from "@/lib/types"
 const formSchema = z.object({
   name: z.string().min(1, "Nama produk tidak boleh kosong."),
   description: z.string().min(1, "Deskripsi tidak boleh kosong."),
-  category: z.string().min(1, "Kategori tidak boleh kosong."),
   price: z.coerce.number().min(0, "Harga harus angka positif."),
+  costPrice: z.coerce.number().min(0, "Harga modal harus angka positif."),
   stock: z.coerce.number().int().min(0, "Stok harus bilangan bulat positif."),
 })
 
@@ -59,8 +59,8 @@ export function ProductFormDialog({ product, children, open: openProp, onOpenCha
     defaultValues: {
       name: "",
       description: "",
-      category: "",
       price: 0,
+      costPrice: 0,
       stock: 0,
     },
   })
@@ -73,8 +73,8 @@ export function ProductFormDialog({ product, children, open: openProp, onOpenCha
         form.reset({
           name: "",
           description: "",
-          category: "",
           price: 0,
+          costPrice: 0,
           stock: 0,
         });
       }
@@ -88,8 +88,8 @@ export function ProductFormDialog({ product, children, open: openProp, onOpenCha
       const productData = {
         name: values.name,
         description: values.description,
-        category: values.category,
         price: values.price,
+        costPrice: values.costPrice,
         stock: values.stock,
       }
       if (isEditMode && product?.id) {
@@ -156,32 +156,34 @@ export function ProductFormDialog({ product, children, open: openProp, onOpenCha
                 </FormItem>
               )}
             />
-             <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Kategori</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Minuman" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Harga</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="0" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Harga Jual</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="0" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="costPrice"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Harga Modal</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="0" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
               name="stock"

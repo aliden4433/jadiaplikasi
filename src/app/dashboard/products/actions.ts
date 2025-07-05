@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from "firebase/firestore"
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, writeBatch } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import type { Product } from "@/lib/types"
 
@@ -22,6 +22,25 @@ export async function addProduct(product: Omit<Product, "id">) {
   } catch (error) {
     console.error("Error adding product: ", error)
     return { success: false, message: "Gagal menambahkan produk." }
+  }
+}
+
+export async function addProductsBatch(products: Omit<Product, "id">[]) {
+  try {
+    const productsCol = collection(db, "products");
+    const batch = writeBatch(db);
+
+    products.forEach((product) => {
+      const docRef = doc(productsCol); // Automatically generate unique ID
+      batch.set(docRef, product);
+    });
+
+    await batch.commit();
+    revalidatePath("/dashboard/products");
+    return { success: true, message: "Produk berhasil diimpor." };
+  } catch (error) {
+    console.error("Error adding products in batch: ", error);
+    return { success: false, message: "Gagal mengimpor produk." };
   }
 }
 

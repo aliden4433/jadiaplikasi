@@ -3,7 +3,6 @@
 import { ColumnDef } from "@tanstack/react-table"
 
 import type { Product } from "@/lib/types"
-import { Badge } from "@/components/ui/badge"
 import { ProductRowActions } from "./product-row-actions"
 
 export const columns: ColumnDef<Product>[] = [
@@ -12,15 +11,23 @@ export const columns: ColumnDef<Product>[] = [
     header: "Nama",
   },
   {
-    accessorKey: "category",
-    header: "Kategori",
-    cell: ({ row }) => <Badge variant="outline">{row.original.category}</Badge>,
-  },
-  {
     accessorKey: "price",
-    header: "Harga",
+    header: "Harga Jual",
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue("price"))
+      const formatted = new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        minimumFractionDigits: 0,
+      }).format(amount)
+      return <div className="font-medium">{formatted}</div>
+    },
+  },
+  {
+    accessorKey: "costPrice",
+    header: "Harga Modal",
+    cell: ({ row }) => {
+      const amount = parseFloat(row.getValue("costPrice"))
       const formatted = new Intl.NumberFormat("id-ID", {
         style: "currency",
         currency: "IDR",
