@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
 import type { DateRange } from "react-day-picker"
 import { addDays, format } from "date-fns"
@@ -25,10 +25,14 @@ interface ReportsClientPageProps {
 }
 
 export function ReportsClientPage({ initialSales, products }: ReportsClientPageProps) {
-  const [date, setDate] = useState<DateRange | undefined>({
-    from: addDays(new Date(), -6), // Default to last 7 days
-    to: new Date(),
-  })
+  const [date, setDate] = useState<DateRange | undefined>(undefined)
+
+  useEffect(() => {
+    setDate({
+      from: addDays(new Date(), -6), // Default to last 7 days
+      to: new Date(),
+    })
+  }, [])
 
   const filteredSales = useMemo(() => {
     if (!date?.from) return []
@@ -177,4 +181,3 @@ export function ReportsClientPage({ initialSales, products }: ReportsClientPageP
     </div>
   )
 }
-
