@@ -32,7 +32,6 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { SalesImportButton } from "./sales/sales-import-button"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
-import { Slider } from "@/components/ui/slider"
 import { Calendar } from "@/components/ui/calendar"
 
 interface SalesClientPageProps {
@@ -294,40 +293,9 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
               <p>Subtotal</p>
               <p>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(subtotal)}</p>
             </div>
-             <div className="flex justify-between items-center">
+            <div className="flex justify-between">
               <p>Diskon</p>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-24 justify-end">{discount}%</Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-64" align="end">
-                  <div className="grid gap-4">
-                    <div className="space-y-2">
-                      <h4 className="font-medium leading-none">Atur Diskon</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Gunakan slider atau ketik persentase.
-                      </p>
-                    </div>
-                    <div className="grid gap-2">
-                       <Slider
-                          defaultValue={[discount]}
-                          max={100}
-                          step={0.5}
-                          onValueChange={(value) => setDiscount(value[0])}
-                        />
-                      <Input
-                        type="number"
-                        value={discount}
-                        onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
-                        className="w-full h-8"
-                        min="0"
-                        max="100"
-                        step="0.5"
-                      />
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
+              <p className="font-medium">{discount}%</p>
             </div>
             {discount > 0 && (
               <div className="flex justify-between text-sm text-muted-foreground">
