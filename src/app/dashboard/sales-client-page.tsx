@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { SalesImportButton } from "./sales/sales-import-button"
+import { Label } from "@/components/ui/label"
 
 interface SalesClientPageProps {
   products: Product[]
@@ -74,7 +75,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
             : item
         )
       }
-      return [...prevCart, { product, quantity: 1 }]
+      return [...prevCart, { product, quantity: 1, price: product.price }]
     })
     if (showToast) {
       toast({
@@ -105,12 +106,22 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
       )
     }
   }
+  
+  const updatePrice = (productId: string, price: number) => {
+    if (isNaN(price) || price < 0) return
+
+    setCart((prevCart) =>
+      prevCart.map((item) =>
+        item.product.id === productId ? { ...item, price: price } : item
+      )
+    )
+  }
 
   const removeFromCart = (productId: string) => {
     setCart((prevCart) => prevCart.filter((item) => item.product.id !== productId))
   }
 
-  const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0)
+  const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0)
   const discountAmount = subtotal * (discount / 100)
   const total = subtotal - discountAmount
   const totalItemsInCart = cart.reduce((acc, item) => acc + item.quantity, 0)
@@ -153,33 +164,44 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
     <div className="flex-grow overflow-y-auto">
       <div className="p-4">
         {cart.length === 0 ? (
-          <p className="text-muted-foreground">Tidak ada item di keranjang.</p>
+          <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground pt-16">
+            <ShoppingCart className="w-12 h-12 mb-4" />
+            <p className="font-semibold">Keranjang Anda kosong.</p>
+            <p className="text-sm">Klik produk untuk menambahkannya.</p>
+          </div>
         ) : (
           <div className="space-y-4">
             {cart.map((item) => (
-              <div key={item.product.id} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 bg-secondary rounded-md flex items-center justify-center flex-shrink-0">
-                    <Package className="w-6 h-6 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <p className="font-medium">{item.product.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(item.product.price)}
-                    </p>
-                  </div>
+              <div key={item.product.id} className="space-y-2 border-b border-border pb-3 last:border-b-0">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-medium break-words flex-grow">{item.product.name}</p>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => removeFromCart(item.product.id!)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    value={item.quantity}
-                    onChange={(e) => updateQuantity(item.product.id!, parseInt(e.target.value))}
-                    className="w-16 h-8 text-center"
-                    min="1"
-                  />
-                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeFromCart(item.product.id!)}>
-                    <Trash2 className="h-4 w-4" />
-                   </Button>
+                <div className="flex items-end justify-between gap-4">
+                  <div className="grid gap-1.5">
+                    <Label htmlFor={`price-${item.product.id}`} className="text-xs text-muted-foreground">Harga</Label>
+                    <Input
+                      id={`price-${item.product.id}`}
+                      type="number"
+                      value={item.price}
+                      onChange={(e) => updatePrice(item.product.id!, parseFloat(e.target.value))}
+                      className="w-28 h-9 text-sm"
+                      step="1000"
+                    />
+                  </div>
+                   <div className="grid gap-1.5">
+                    <Label htmlFor={`qty-${item.product.id}`} className="text-xs text-muted-foreground">Jumlah</Label>
+                    <Input
+                      id={`qty-${item.product.id}`}
+                      type="number"
+                      value={item.quantity}
+                      onChange={(e) => updateQuantity(item.product.id!, parseInt(e.target.value))}
+                      className="w-20 h-9 text-center text-sm"
+                      min="1"
+                    />
+                  </div>
                 </div>
               </div>
             ))}
@@ -315,7 +337,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
       {isMobile ? (
         <Sheet>
           <SheetTrigger asChild>{CartTrigger}</SheetTrigger>
-          <SheetContent side="bottom" className="w-full rounded-t-lg p-0 flex flex-col max-h-[80vh]">
+          <SheetContent side="bottom" className="w-full p-0 flex flex-col h-screen">
             <SheetHeader className="p-4 pb-2">
               <SheetTitle>Pesanan Saat Ini</SheetTitle>
             </SheetHeader>
