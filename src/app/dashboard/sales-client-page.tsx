@@ -25,12 +25,12 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { SalesImportButton } from "./sales/sales-import-button"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
+import { Slider } from "@/components/ui/slider"
 
 interface SalesClientPageProps {
   products: Product[]
@@ -68,27 +68,6 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
 
 
   const addToCart = (product: Product, showToast = true) => {
-    // This check is now redundant because of the UI disabling, but good for safety
-    if (product.stock <= 0) {
-      toast({
-        variant: "destructive",
-        title: "Stok Habis",
-        description: `${product.name} sedang tidak tersedia.`,
-      })
-      return
-    }
-
-    const existingItem = cart.find((item) => item.product.id === product.id)
-    
-    if (existingItem && existingItem.quantity >= product.stock) {
-      toast({
-        variant: "destructive",
-        title: "Stok Tidak Cukup",
-        description: `Anda sudah memiliki semua ${product.stock} unit ${product.name} yang tersedia di keranjang.`,
-      })
-      return
-    }
-
     setCart((prevCart) => {
       const itemInCart = prevCart.find((item) => item.product.id === product.id)
       if (itemInCart) {
@@ -120,28 +99,6 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
   }
 
   const updateQuantity = (productId: string, quantity: number) => {
-    const itemToUpdate = cart.find((item) => item.product.id === productId);
-    if (!itemToUpdate) return;
-    
-    // Find the master product from the initial props to get the authoritative stock count
-    const masterProduct = products.find(p => p.id === productId);
-    if (!masterProduct) return; // Should not happen if item is in cart
-
-    if (quantity > masterProduct.stock) {
-      toast({
-        variant: "destructive",
-        title: "Stok Tidak Cukup",
-        description: `Hanya ada ${masterProduct.stock} unit ${masterProduct.name} yang tersisa.`,
-      });
-      // Cap the quantity at max stock instead of just returning
-      setCart((prevCart) =>
-        prevCart.map((item) =>
-          item.product.id === productId ? { ...item, quantity: masterProduct.stock } : item
-        )
-      );
-      return;
-    }
-
     if (quantity < 1) {
       removeFromCart(productId)
     } else {
@@ -301,19 +258,39 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
               <p>Subtotal</p>
               <p>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(subtotal)}</p>
             </div>
-            <div className="flex justify-between items-center">
+             <div className="flex justify-between items-center">
               <p>Diskon</p>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  value={discount}
-                  onChange={handleDiscountChange}
-                  className="w-20 h-8 text-right"
-                  min="0"
-                  max="100"
-                />
-                <span>%</span>
-              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-24 justify-end">{discount}%</Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64" align="end">
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <h4 className="font-medium leading-none">Atur Diskon</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Gunakan slider atau ketik persentase.
+                      </p>
+                    </div>
+                    <div className="grid gap-2">
+                       <Slider
+                          defaultValue={[discount]}
+                          max={100}
+                          step={1}
+                          onValueChange={(value) => setDiscount(value[0])}
+                        />
+                      <Input
+                        type="number"
+                        value={discount}
+                        onChange={handleDiscountChange}
+                        className="w-full h-8"
+                        min="0"
+                        max="100"
+                      />
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
             {discount > 0 && (
               <div className="flex justify-between text-sm text-muted-foreground">
@@ -403,15 +380,9 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
           {filteredAndSortedProducts.map((product) => (
             <Card
               key={product.id}
-              className={cn(
-                "flex flex-col transition-shadow duration-200 relative",
-                product.stock > 0 ? "cursor-pointer hover:shadow-lg" : "opacity-50"
-              )}
-              onClick={() => product.stock > 0 && addToCart(product)}
+              className="flex flex-col transition-shadow duration-200 relative cursor-pointer hover:shadow-lg"
+              onClick={() => addToCart(product)}
             >
-              {product.stock <= 0 && (
-                <Badge variant="destructive" className="absolute top-2 right-2 z-10">Habis</Badge>
-              )}
               <CardContent className="p-3 flex flex-col flex-grow justify-between">
                 <p className="font-semibold text-sm line-clamp-3 pr-4">{product.name}</p>
                 <div className="flex justify-between items-baseline mt-2">

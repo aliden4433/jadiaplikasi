@@ -126,10 +126,6 @@ export async function addSale(saleData: {
         const currentStock = productDoc.data().stock
         const newStock = currentStock - item.quantity
 
-        if (newStock < 0) {
-          throw new Error(`Stok untuk "${item.product.name}" tidak mencukupi.`)
-        }
-
         transaction.update(productRef, { stock: newStock })
       }
     })
