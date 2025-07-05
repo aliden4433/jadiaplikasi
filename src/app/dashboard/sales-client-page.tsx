@@ -25,7 +25,6 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-  SheetClose,
   SheetDescription,
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -72,6 +71,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
   const addToCart = (product: Product, quantity: number = 1, showToast = true) => {
     setCart((prevCart) => {
       const itemInCart = prevCart.find((item) => item.product.id === product.id)
+
       if (itemInCart) {
         return prevCart.map((item) =>
           item.product.id === product.id
@@ -130,15 +130,6 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
   const discountAmount = subtotal * (discount / 100)
   const total = subtotal - discountAmount
   const totalItemsInCart = cart.reduce((acc, item) => acc + item.quantity, 0)
-
-  const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value)
-    if (isNaN(value)) {
-      setDiscount(0)
-    } else {
-      setDiscount(Math.max(0, Math.min(100, value)))
-    }
-  }
 
   async function handleProcessSale() {
     if (cart.length === 0) {
@@ -284,7 +275,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
                       <Input
                         type="number"
                         value={discount}
-                        onChange={handleDiscountChange}
+                        onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
                         className="w-full h-8"
                         min="0"
                         max="100"
@@ -357,7 +348,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <CardTitle>Produk</CardTitle>
             <div className="flex items-center gap-2 w-full md:w-auto">
-                <SalesImportButton onImportSuccess={handleImportSuccess} />
+                <SalesImportButton onImportSuccess={handleImportSuccess} products={products} />
                 <Input
                     placeholder="Cari produk..."
                     value={searchTerm}
@@ -388,10 +379,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
               <CardContent className="p-3 flex flex-col flex-grow">
                 <p className="font-semibold text-sm line-clamp-2 flex-grow">{product.name}</p>
                  <div className="flex justify-between items-baseline mt-2">
-                    <span className={cn(
-                      "text-xs",
-                      product.stock > 0 ? "text-muted-foreground" : "text-destructive font-medium"
-                    )}>
+                    <span className="text-xs text-muted-foreground">
                       Stok: {product.stock}
                     </span>
                     <p className="text-sm text-foreground font-medium">
@@ -399,11 +387,6 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
                     </p>
                 </div>
               </CardContent>
-              {product.stock <= 0 && (
-                 <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
-                    <Badge variant="destructive">Habis</Badge>
-                </div>
-              )}
             </Card>
           ))}
         </CardContent>
@@ -412,13 +395,13 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
       {isMobile ? (
         <Sheet>
           <SheetTrigger asChild>{CartTrigger}</SheetTrigger>
-          <SheetContent side="bottom" className="w-full p-0 flex flex-col h-screen max-h-screen">
-            <SheetHeader className="p-4 pb-2">
-              <SheetTitle>Pesanan Saat Ini</SheetTitle>
-              <SheetDescription className="sr-only">
-                Kelola item di keranjang Anda sebelum menyelesaikan transaksi.
-              </SheetDescription>
-            </SheetHeader>
+          <SheetContent side="bottom" className="w-full p-0 flex flex-col h-screen">
+             <SheetHeader className="p-4 pb-2">
+               <SheetTitle>Pesanan Saat Ini</SheetTitle>
+               <SheetDescription className="sr-only">
+                 Kelola item di keranjang Anda sebelum menyelesaikan transaksi.
+               </SheetDescription>
+             </SheetHeader>
             {CartItems}
             {CartSummary}
           </SheetContent>

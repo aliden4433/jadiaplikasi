@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { FileUp, Loader2, Wand2, Trash2, ArrowLeft, CheckCircle2, AlertTriangle } from "lucide-react"
+import { FileUp, Loader2, Wand2, Trash2, ArrowLeft, CheckCircle2, AlertTriangle, ChevronsUpDown, Check } from "lucide-react"
 
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
@@ -25,9 +25,13 @@ import type { CartItem, Product } from "@/lib/types"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { Badge } from "@/components/ui/badge"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Command, CommandEmpty, CommandInput, CommandGroup, CommandItem, CommandList } from "@/components/ui/command"
+import { cn } from "@/lib/utils"
 
 interface SalesImportButtonProps {
   onImportSuccess: (items: CartItem[]) => void
+  products: Product[]
 }
 
 type ImportStep = "upload" | "review" | "loading"
@@ -44,10 +48,11 @@ const formSchema = z.object({
   items: z.array(reviewItemSchema),
 })
 
-export function SalesImportButton({ onImportSuccess }: SalesImportButtonProps) {
+export function SalesImportButton({ onImportSuccess, products }: SalesImportButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [step, setStep] = useState<ImportStep>("upload")
   const [file, setFile] = useState<File | null>(null)
+  const [openStates, setOpenStates] = useState<Record<number, boolean>>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
 
@@ -62,6 +67,10 @@ export function SalesImportButton({ onImportSuccess }: SalesImportButtonProps) {
     control: form.control,
     name: "items",
   })
+
+  const setOpenState = (index: number, open: boolean) => {
+    setOpenStates(prev => ({ ...prev, [index]: open }))
+  }
   
   useEffect(() => {
     if (!isOpen) {
@@ -69,6 +78,7 @@ export function SalesImportButton({ onImportSuccess }: SalesImportButtonProps) {
         setStep("upload")
         setFile(null)
         replace([])
+        setOpenStates({})
         if (fileInputRef.current) {
           fileInputRef.current.value = ""
         }
@@ -208,14 +218,14 @@ export function SalesImportButton({ onImportSuccess }: SalesImportButtonProps) {
                     {fields.map((field, index) => (
                       <div key={field.id} className="p-4 border rounded-lg relative bg-background">
                         <div className="flex items-center gap-3 mb-4">
-                            {field.id ? <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" /> : <AlertTriangle className="h-5 w-5 text-yellow-500 flex-shrink-0" />}
+                            {form.getValues(`items.${index}.id`) ? <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" /> : <AlertTriangle className="h-5 w-5 text-yellow-500 flex-shrink-0" />}
                             <div className="flex-grow">
-                                <h4 className="font-semibold">{field.name}</h4>
+                                <h4 className="font-semibold">{form.getValues(`items.${index}.name`)}</h4>
                                 <p className="text-xs text-muted-foreground">
-                                    {field.id ? `Cocok dengan produk yang ada.` : `Akan dibuat sebagai produk baru.`}
+                                    {form.getValues(`items.${index}.id`) ? `Cocok dengan produk yang ada.` : `Akan dibuat sebagai produk baru.`}
                                 </p>
                             </div>
-                            {field.id ? <Badge variant="secondary">Cocok</Badge> : <Badge variant="outline">Baru</Badge>}
+                            {form.getValues(`items.${index}.id`) ? <Badge variant="secondary">Cocok</Badge> : <Badge variant="outline">Baru</Badge>}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -223,9 +233,74 @@ export function SalesImportButton({ onImportSuccess }: SalesImportButtonProps) {
                             control={form.control}
                             name={`items.${index}.name`}
                             render={({ field }) => (
-                              <FormItem className="md:col-span-3">
+                              <FormItem className="md:col-span-3 flex flex-col">
                                 <Label>Nama Produk</Label>
-                                <FormControl><Input {...field} /></FormControl>
+                                <Popover open={openStates[index] || false} onOpenChange={(open) => setOpenState(index, open)}>
+                                  <PopoverTrigger asChild>
+                                    <FormControl>
+                                      <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        className={cn(
+                                          "w-full justify-between font-normal",
+                                          !field.value && "text-muted-foreground"
+                                        )}
+                                      >
+                                        {field.value || "Pilih atau ketik produk..."}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                      </Button>
+                                    </FormControl>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                                    <Command
+                                      filter={(value, search) => {
+                                        if (value.toLowerCase().includes(search.toLowerCase())) return 1
+                                        return 0
+                                      }}
+                                    >
+                                      <CommandInput 
+                                        placeholder="Cari produk..."
+                                        value={field.value}
+                                        onValueChange={(search) => {
+                                          field.onChange(search);
+                                          form.setValue(`items.${index}.id`, undefined);
+                                          form.setValue(`items.${index}.matchedProduct`, null);
+                                        }}
+                                      />
+                                      <CommandEmpty>Produk tidak ditemukan.</CommandEmpty>
+                                      <CommandList>
+                                        <CommandGroup>
+                                          {products.map((product) => (
+                                            <CommandItem
+                                              value={product.name}
+                                              key={product.id}
+                                              onSelect={(currentValue) => {
+                                                const selectedProduct = products.find(p => p.name.toLowerCase() === currentValue.toLowerCase());
+                                                if (selectedProduct) {
+                                                    form.setValue(`items.${index}.name`, selectedProduct.name);
+                                                    form.setValue(`items.${index}.id`, selectedProduct.id);
+                                                    form.setValue(`items.${index}.price`, selectedProduct.price);
+                                                    form.setValue(`items.${index}.matchedProduct`, selectedProduct);
+                                                }
+                                                setOpenState(index, false);
+                                              }}
+                                            >
+                                              <Check
+                                                className={cn(
+                                                  "mr-2 h-4 w-4",
+                                                  form.getValues(`items.${index}.id`) === product.id
+                                                    ? "opacity-100"
+                                                    : "opacity-0"
+                                                )}
+                                              />
+                                              {product.name}
+                                            </CommandItem>
+                                          ))}
+                                        </CommandGroup>
+                                      </CommandList>
+                                    </Command>
+                                  </PopoverContent>
+                                </Popover>
                                 <FormMessage />
                               </FormItem>
                             )}
