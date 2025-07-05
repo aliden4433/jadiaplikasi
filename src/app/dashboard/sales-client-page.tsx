@@ -386,11 +386,11 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
                       {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
                     </p>
                   </div>
-                  <div className="flex justify-between items-baseline mt-1">
+                  <div className="flex flex-col items-start md:flex-row md:justify-between md:items-baseline mt-1">
                     <p className="text-xs text-muted-foreground">
                       Stok: {product.stock}
                     </p>
-                    <p className="font-semibold text-sm text-foreground flex-shrink-0 block md:hidden">
+                    <p className="font-semibold text-sm text-foreground block md:hidden">
                       {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}
                     </p>
                   </div>
@@ -436,5 +436,3 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
     </div>
   )
 }
-
-    
