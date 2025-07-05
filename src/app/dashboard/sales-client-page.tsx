@@ -25,6 +25,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetTrigger,
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { SalesImportButton } from "./sales/sales-import-button"
@@ -203,7 +204,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
             {cart.map((item) => (
               <div key={item.product.id} className="space-y-2 border-b border-border pb-3 last:border-b-0">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm break-words flex-grow">{item.product.name}</p>
+                  <p className="text-sm font-medium break-words flex-grow">{item.product.name}</p>
                   <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => removeFromCart(item.product.id!)}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -412,7 +413,7 @@ export function SalesClientPage({ products }: SalesClientPageProps) {
             <CardHeader className="p-4">
               <CardTitle>Pesanan Saat Ini</CardTitle>
             </CardHeader>
-            <div className="flex-grow overflow-y-auto max-h-[60vh]">
+            <div className="flex-grow overflow-y-auto max-h-[calc(80vh-180px)]">
                 {CartItems}
             </div>
             {CartSummary}
