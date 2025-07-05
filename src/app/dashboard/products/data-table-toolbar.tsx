@@ -19,15 +19,17 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { deleteProducts } from "./actions"
-import type { Product } from "@/lib/types"
+import type { Product, AppUser } from "@/lib/types"
 import { ProductBulkEditDialog } from "./product-bulk-edit-dialog"
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
+  userRole?: AppUser['role']
 }
 
 export function DataTableToolbar<TData>({
   table,
+  userRole,
 }: DataTableToolbarProps<TData>) {
   const { toast } = useToast()
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -70,7 +72,7 @@ export function DataTableToolbar<TData>({
           className="max-w-sm"
         />
       </div>
-      {selectedRows.length > 0 ? (
+      {userRole === 'admin' && selectedRows.length > 0 ? (
         <div className="flex items-center space-x-2">
           <ProductBulkEditDialog
             products={selectedRows.map(row => row.original as Product)}

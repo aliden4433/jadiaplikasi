@@ -32,6 +32,7 @@ import { useToast } from "@/hooks/use-toast";
 import { deleteSale } from "./actions";
 import { ExportSalesButton } from "./export-sales-button";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
 
 interface SalesHistoryListProps {
   sales: Sale[];
@@ -42,6 +43,8 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
   const [saleToDelete, setSaleToDelete] = useState<Sale | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const userRole = user?.role;
   const [date, setDate] = useState<DateRange | undefined>(undefined)
 
   useEffect(() => {
@@ -168,7 +171,7 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
                       />
                     </PopoverContent>
                   </Popover>
-                  <ExportSalesButton sales={filteredSales} />
+                  {userRole === 'admin' && <ExportSalesButton sales={filteredSales} />}
               </div>
           </div>
         </CardHeader>
@@ -189,22 +192,24 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
                         </div>
                         <div className="flex items-center gap-2">
                             <p className="font-bold text-base text-primary">{formatCurrency(sale.total)}</p>
-                            <Button
-                                asChild
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleDeleteClick(sale);
-                                }}
-                                aria-label="Hapus Transaksi"
-                            >
-                                <span>
-                                  <Trash2 className="h-4 w-4" />
-                                </span>
-                            </Button>
+                            {userRole === 'admin' && (
+                                <Button
+                                    asChild
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleDeleteClick(sale);
+                                    }}
+                                    aria-label="Hapus Transaksi"
+                                >
+                                    <span>
+                                      <Trash2 className="h-4 w-4" />
+                                    </span>
+                                </Button>
+                            )}
                         </div>
                       </div>
                     </AccordionTrigger>
@@ -239,7 +244,7 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
                           <p>Total</p>
                           <p>{formatCurrency(sale.total)}</p>
                         </div>
-                        {sale.profit !== undefined && (
+                        {userRole === 'admin' && sale.profit !== undefined && (
                             <div className="flex justify-between text-sm text-green-600 dark:text-green-500 pt-1">
                                 <p className="font-medium">Keuntungan</p>
                                 <p className="font-medium">{formatCurrency(sale.profit)}</p>
