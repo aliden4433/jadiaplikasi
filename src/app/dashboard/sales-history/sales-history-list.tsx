@@ -174,10 +174,10 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
         </CardHeader>
         <CardContent>
           {filteredSales.length > 0 ? (
-              <Accordion type="single" collapsible className="w-full">
+              <Accordion type="single" collapsible className="w-full space-y-4">
                 {filteredSales.map((sale) => (
-                  <AccordionItem value={sale.id} key={sale.id}>
-                    <AccordionTrigger className="hover:bg-accent/50 px-4 rounded-md transition-colors group">
+                  <AccordionItem value={sale.id} key={sale.id} className="border-b-0 rounded-lg border overflow-hidden">
+                    <AccordionTrigger className="hover:bg-accent/50 px-4 transition-colors group data-[state=open]:bg-accent/50">
                       <div className="flex justify-between items-center w-full pr-4">
                         <div className="text-left">
                           <p className="font-semibold">
