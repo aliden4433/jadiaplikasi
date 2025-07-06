@@ -38,3 +38,22 @@ export type AppUser = {
   email: string | null
   role: "admin" | "cashier"
 }
+
+export const expenseCategories = [
+  "Stok Barang",
+  "Operasional",
+  "Gaji",
+  "Marketing",
+  "Sewa",
+  "Lainnya",
+] as const;
+
+export type ExpenseCategory = typeof expenseCategories[number];
+
+export type Expense = {
+  id: string;
+  description: string;
+  amount: number;
+  category: ExpenseCategory;
+  date: string;
+};

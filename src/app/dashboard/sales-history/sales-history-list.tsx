@@ -2,7 +2,7 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react";
-import type { Sale } from "@/lib/types";
+import type { Sale, Expense } from "@/lib/types";
 import { format, addDays } from "date-fns";
 import { id } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
@@ -15,7 +15,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ReceiptText, Trash2, Loader2, Calendar as CalendarIcon, ChevronDown } from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,9 +37,10 @@ import { useAuth } from "@/hooks/use-auth";
 
 interface SalesHistoryListProps {
   sales: Sale[];
+  expenses: Expense[];
 }
 
-export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps) {
+export function SalesHistoryList({ sales: initialSales, expenses: initialExpenses }: SalesHistoryListProps) {
   const [sales, setSales] = useState(initialSales);
   const [selectedSales, setSelectedSales] = useState<string[]>([]);
   const [salesForDeletion, setSalesForDeletion] = useState<Sale[]>([]);
@@ -63,7 +64,6 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
     const fromDate = date.from;
     const toDate = date.to ? addDays(date.to, 1) : addDays(fromDate, 1);
     
-    // Set time to beginning and end of day for accurate comparison
     fromDate.setHours(0, 0, 0, 0);
     toDate.setHours(0, 0, 0, 0);
 
@@ -73,6 +73,19 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
       return saleDate >= fromDate && saleDate < toDate
     })
   }, [sales, date])
+
+  const filteredExpenses = useMemo(() => {
+    if (!date?.from) return []
+    
+    const fromDate = date.from
+    const toDate = date.to ? addDays(date.to, 1) : addDays(fromDate, 1)
+
+    return initialExpenses.filter(expense => {
+        const expenseDate = new Date(expense.date)
+        return expenseDate >= fromDate && expenseDate < toDate
+    })
+  }, [initialExpenses, date])
+
 
   // Clear selections when filter changes
   useEffect(() => {
@@ -209,7 +222,7 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
                       />
                     </PopoverContent>
                   </Popover>
-                  {userRole === 'admin' && <ExportSalesButton sales={filteredSales} />}
+                  {userRole === 'admin' && <ExportSalesButton sales={filteredSales} expenses={filteredExpenses} />}
               </div>
           </div>
         </CardHeader>
@@ -251,6 +264,7 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
                           <Checkbox
                             checked={selectedSales.includes(sale.id)}
                             onCheckedChange={(checked) => handleSelectSale(sale.id, checked as boolean)}
+                            onClick={(e) => e.stopPropagation()}
                             aria-label={`Pilih transaksi ${sale.transactionId}`}
                           />
                         </div>
@@ -278,9 +292,13 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
                                     buttonVariants({ variant: "ghost", size: "icon" }),
                                     "h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                                 )}
-                                onClick={() => handleDeleteRequest([sale])}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteRequest([sale]);
+                                }}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' || e.key === ' ') {
+                                        e.stopPropagation();
                                         handleDeleteRequest([sale]);
                                     }
                                 }}
@@ -361,5 +379,3 @@ export function SalesHistoryList({ sales: initialSales }: SalesHistoryListProps)
     </>
   );
 }
-
-    

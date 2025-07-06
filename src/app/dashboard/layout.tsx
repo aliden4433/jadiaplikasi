@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart2, BrainCircuit, History, LogOut, Package, ShoppingCart, UserCircle, PanelLeft, Settings } from "lucide-react"
+import { BarChart2, BrainCircuit, History, LogOut, Package, ShoppingCart, UserCircle, PanelLeft, Settings, Wallet } from "lucide-react"
 
 import {
   Sidebar,
@@ -23,8 +23,9 @@ import { useAuth } from "@/hooks/use-auth"
 const allNavItems = [
   { href: "/dashboard", icon: ShoppingCart, label: "Penjualan" },
   { href: "/dashboard/products", icon: Package, label: "Produk" },
-  { href: "/dashboard/reports", icon: BarChart2, label: "Laporan", roles: ["admin"] },
   { href: "/dashboard/sales-history", icon: History, label: "Riwayat Penjualan" },
+  { href: "/dashboard/expenses", icon: Wallet, label: "Pengeluaran", roles: ["admin"] },
+  { href: "/dashboard/reports", icon: BarChart2, label: "Laporan", roles: ["admin"] },
   { href: "/dashboard/inventory", icon: BrainCircuit, label: "Inventaris AI", roles: ["admin"] },
   { href: "/dashboard/settings", icon: Settings, label: "Pengaturan", roles: ["admin"] },
 ];

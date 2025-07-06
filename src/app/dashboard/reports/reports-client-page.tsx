@@ -5,9 +5,9 @@ import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
 import type { DateRange } from "react-day-picker"
 import { addDays, format } from "date-fns"
-import { Calendar as CalendarIcon, DollarSign, Package, ShoppingBag, TrendingUp } from "lucide-react"
+import { Calendar as CalendarIcon, DollarSign, Package, ShoppingBag, TrendingUp, Wallet } from "lucide-react"
 
-import type { Product, Sale, SaleItem } from "@/lib/types"
+import type { Product, Sale, SaleItem, Expense } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -22,9 +22,10 @@ import { BestsellersChart } from "./charts"
 interface ReportsClientPageProps {
   initialSales: Sale[]
   products: Product[]
+  initialExpenses: Expense[]
 }
 
-export function ReportsClientPage({ initialSales, products }: ReportsClientPageProps) {
+export function ReportsClientPage({ initialSales, products, initialExpenses }: ReportsClientPageProps) {
   const [date, setDate] = useState<DateRange | undefined>(undefined)
 
   useEffect(() => {
@@ -38,7 +39,6 @@ export function ReportsClientPage({ initialSales, products }: ReportsClientPageP
     if (!date?.from) return []
 
     const fromDate = date.from
-    // Add 1 day to the 'to' date to include the entire day in the range
     const toDate = date.to ? addDays(date.to, 1) : addDays(fromDate, 1)
 
     return initialSales.filter(sale => {
@@ -46,13 +46,27 @@ export function ReportsClientPage({ initialSales, products }: ReportsClientPageP
       return saleDate >= fromDate && saleDate < toDate
     })
   }, [initialSales, date])
+  
+  const filteredExpenses = useMemo(() => {
+    if (!date?.from) return []
+    
+    const fromDate = date.from
+    const toDate = date.to ? addDays(date.to, 1) : addDays(fromDate, 1)
 
-  const { revenue, count, profit } = useMemo(() => {
+    return initialExpenses.filter(expense => {
+        const expenseDate = new Date(expense.date)
+        return expenseDate >= fromDate && expenseDate < toDate
+    })
+  }, [initialExpenses, date])
+
+  const { revenue, count, profit, totalExpenses } = useMemo(() => {
     const revenue = filteredSales.reduce((acc, sale) => acc + sale.total, 0)
-    const profit = filteredSales.reduce((acc, sale) => acc + (sale.profit || 0), 0)
+    const grossProfit = filteredSales.reduce((acc, sale) => acc + (sale.profit || 0), 0)
     const count = filteredSales.length
-    return { revenue, count, profit }
-  }, [filteredSales])
+    const totalExpenses = filteredExpenses.reduce((acc, expense) => acc + expense.amount, 0)
+    const profit = grossProfit - totalExpenses
+    return { revenue, count, profit, totalExpenses }
+  }, [filteredSales, filteredExpenses])
   
   const bestsellers = useMemo(() => {
     const itemCounts: { [key: string]: number } = {}
@@ -115,7 +129,7 @@ export function ReportsClientPage({ initialSales, products }: ReportsClientPageP
             </PopoverContent>
           </Popover>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pendapatan</CardTitle>
@@ -130,25 +144,37 @@ export function ReportsClientPage({ initialSales, products }: ReportsClientPageP
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Keuntungan</CardTitle>
+            <CardTitle className="text-sm font-medium">Pengeluaran</CardTitle>
+            <Wallet className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(totalExpenses)}
+            </div>
+            <p className="text-xs text-muted-foreground">Total pengeluaran di periode ini</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Laba Bersih</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(profit)}
             </div>
-            <p className="text-xs text-muted-foreground">Perkiraan laba bersih di periode ini</p>
+            <p className="text-xs text-muted-foreground">Pendapatan dikurangi pengeluaran</p>
           </CardContent>
         </Card>
         <Link href="/dashboard/sales-history" className="block">
           <Card className="hover:bg-accent transition-colors h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Penjualan (Semua Waktu)</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Penjualan</CardTitle>
               <ShoppingBag className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{allTimeSalesCount}</div>
-              <p className="text-xs text-muted-foreground">Total transaksi tercatat</p>
+              <p className="text-xs text-muted-foreground">Total transaksi (semua waktu)</p>
             </CardContent>
           </Card>
         </Link>
