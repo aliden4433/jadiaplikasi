@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { PlusCircle, Wallet, ChevronLeft, ChevronRight } from "lucide-react";
@@ -21,10 +21,15 @@ interface ExpensesClientPageProps {
 export function ExpensesClientPage({ initialExpenses, initialCategories }: ExpensesClientPageProps) {
   const columns = React.useMemo(() => getColumns(initialCategories), [initialCategories]);
   const isMobile = useIsMobile();
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState<Date | undefined>(undefined);
+
+  useEffect(() => {
+    setCurrentDate(new Date());
+  }, []);
 
   const handlePreviousMonth = () => {
     setCurrentDate(prev => {
+      if (!prev) return undefined;
       const newDate = new Date(prev);
       newDate.setDate(1); // Set to the first day to avoid issues with month lengths
       newDate.setMonth(newDate.getMonth() - 1);
@@ -34,6 +39,7 @@ export function ExpensesClientPage({ initialExpenses, initialCategories }: Expen
 
   const handleNextMonth = () => {
     setCurrentDate(prev => {
+      if (!prev) return undefined;
       const newDate = new Date(prev);
       newDate.setDate(1); // Set to the first day to avoid issues with month lengths
       newDate.setMonth(newDate.getMonth() + 1);
@@ -42,6 +48,10 @@ export function ExpensesClientPage({ initialExpenses, initialCategories }: Expen
   };
 
   const { monthlyTotal, displayedMonthName, filteredExpenses } = useMemo(() => {
+    if (!currentDate) {
+        return { monthlyTotal: 0, displayedMonthName: 'Memuat...', filteredExpenses: [] };
+    }
+
     const selectedMonth = currentDate.getMonth();
     const selectedYear = currentDate.getFullYear();
     const displayedMonthName = format(currentDate, "MMMM yyyy", { locale: id });
@@ -58,6 +68,8 @@ export function ExpensesClientPage({ initialExpenses, initialCategories }: Expen
   }, [initialExpenses, currentDate]);
 
   const isNextMonthDisabled = useMemo(() => {
+    if (!currentDate) return true;
+
     const nextMonth = new Date(currentDate);
     nextMonth.setDate(1);
     nextMonth.setMonth(nextMonth.getMonth() + 1);
