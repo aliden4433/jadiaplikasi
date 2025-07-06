@@ -59,32 +59,34 @@ export function SalesHistoryList({ sales: initialSales, expenses: initialExpense
   }, [])
   
   const filteredSales = useMemo(() => {
-    if (!date?.from) return []
+    if (!date?.from) return [];
 
-    const fromDate = date.from;
-    const toDate = date.to ? addDays(date.to, 1) : addDays(fromDate, 1);
-    
+    const fromDate = new Date(date.from);
     fromDate.setHours(0, 0, 0, 0);
-    toDate.setHours(0, 0, 0, 0);
 
-    return sales.filter(sale => {
-      const saleDate = new Date(sale.date)
-      saleDate.setHours(0,0,0,0);
-      return saleDate >= fromDate && saleDate < toDate
-    })
-  }, [sales, date])
+    const toDate = date.to ? new Date(date.to) : new Date(date.from);
+    toDate.setHours(23, 59, 59, 999);
+
+    return sales.filter((sale) => {
+      const saleDate = new Date(sale.date);
+      return saleDate >= fromDate && saleDate <= toDate;
+    });
+  }, [sales, date]);
 
   const filteredExpenses = useMemo(() => {
-    if (!date?.from) return []
-    
-    const fromDate = date.from
-    const toDate = date.to ? addDays(date.to, 1) : addDays(fromDate, 1)
+    if (!date?.from) return [];
 
-    return initialExpenses.filter(expense => {
-        const expenseDate = new Date(expense.date)
-        return expenseDate >= fromDate && expenseDate < toDate
-    })
-  }, [initialExpenses, date])
+    const fromDate = new Date(date.from);
+    fromDate.setHours(0, 0, 0, 0);
+
+    const toDate = date.to ? new Date(date.to) : new Date(date.from);
+    toDate.setHours(23, 59, 59, 999);
+
+    return initialExpenses.filter((expense) => {
+      const expenseDate = new Date(expense.date);
+      return expenseDate >= fromDate && expenseDate <= toDate;
+    });
+  }, [initialExpenses, date]);
 
 
   // Clear selections when filter changes
