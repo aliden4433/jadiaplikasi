@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -65,7 +66,7 @@ export function CategoryFormDialog({ category, children, open, onOpenChange }: C
     try {
       let result;
       if (isEditMode && category?.id) {
-        result = await updateExpenseCategory(category.id, values.name);
+        result = await updateExpenseCategory(category.id, { name: values.name });
       } else {
         result = await addExpenseCategory(values.name);
       }

@@ -1,11 +1,11 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, Calendar as CalendarIcon } from "lucide-react";
+import { Loader2, Calendar as CalendarIcon, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 
@@ -41,6 +41,7 @@ import { useToast } from "@/hooks/use-toast";
 import { addExpense, updateExpense } from "./actions";
 import type { Expense, ExpenseCategoryDoc } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const formSchema = z.object({
   description: z.string().min(1, "Deskripsi tidak boleh kosong."),
@@ -81,6 +82,13 @@ export function ExpenseFormDialog({ expense, children, categories, open: openPro
     },
   });
 
+  const watchedCategory = form.watch("category");
+
+  const descriptionOptions = useMemo(() => {
+    const selectedCat = categories.find(c => c.name === watchedCategory);
+    return selectedCat?.descriptions || [];
+  }, [watchedCategory, categories]);
+
   useEffect(() => {
     if (open) {
       if (isEditMode && expense) {
@@ -98,6 +106,17 @@ export function ExpenseFormDialog({ expense, children, categories, open: openPro
       }
     }
   }, [expense, isEditMode, open, form, defaultCategory]);
+
+  useEffect(() => {
+    if (!isEditMode && open) { // Only auto-fill on create mode
+      const selectedCat = categories.find(c => c.name === watchedCategory);
+      if (selectedCat?.descriptions && selectedCat.descriptions.length > 0) {
+        form.setValue("description", selectedCat.descriptions[0]);
+      } else {
+        form.setValue("description", ""); // Clear if category has no descriptions
+      }
+    }
+  }, [watchedCategory, isEditMode, open, categories, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
@@ -148,34 +167,8 @@ export function ExpenseFormDialog({ expense, children, categories, open: openPro
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Deskripsi</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Pembelian stok kopi" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Jumlah (Rp)</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="0" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
+             <div className="grid grid-cols-2 gap-4">
+               <FormField
                 control={form.control}
                 name="category"
                 render={({ field }) => (
@@ -197,7 +190,62 @@ export function ExpenseFormDialog({ expense, children, categories, open: openPro
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Jumlah (Rp)</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="0" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Deskripsi</FormLabel>
+                  <div className="relative">
+                    <FormControl>
+                      <Input 
+                        placeholder="e.g., Pembelian stok kopi" 
+                        {...field}
+                        className={cn(descriptionOptions.length > 0 && "pr-8")}
+                      />
+                    </FormControl>
+                    {descriptionOptions.length > 0 && (
+                       <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground"
+                          >
+                            <ChevronDown className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {descriptionOptions.map((desc, index) => (
+                            <DropdownMenuItem 
+                              key={index}
+                              onSelect={() => form.setValue("description", desc)}
+                            >
+                              {desc}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="date"

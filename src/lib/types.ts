@@ -1,3 +1,4 @@
+
 export type Product = {
   id?: string
   name: string
@@ -42,6 +43,7 @@ export type AppUser = {
 export type ExpenseCategoryDoc = {
   id: string;
   name: string;
+  descriptions?: string[];
 };
 
 export type ExpenseCategory = string;

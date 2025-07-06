@@ -1,14 +1,17 @@
+
 "use client";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlusCircle, Trash2, Pencil, Loader2 } from "lucide-react";
+import { PlusCircle, Trash2, Pencil, Loader2, ChevronsUpDown } from "lucide-react";
 import type { ExpenseCategoryDoc } from "@/lib/types";
 import { CategoryFormDialog } from "./category-form-dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
-import { deleteExpenseCategory } from "./actions";
+import { deleteExpenseCategory, updateExpenseCategory } from "./actions";
+import { Input } from "@/components/ui/input";
 
 interface CategorySettingsProps {
   initialCategories: ExpenseCategoryDoc[];
@@ -21,6 +24,43 @@ export function CategorySettingsClient({ initialCategories }: CategorySettingsPr
   const [categoryToDelete, setCategoryToDelete] = useState<ExpenseCategoryDoc | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
+  
+  const [newDescriptions, setNewDescriptions] = useState<Record<string, string>>({});
+  const [isUpdatingDesc, setIsUpdatingDesc] = useState<Record<string, boolean>>({});
+
+  const handleDescriptionChange = (categoryId: string, value: string) => {
+    setNewDescriptions(prev => ({ ...prev, [categoryId]: value }));
+  };
+
+  const handleAddDescription = async (category: ExpenseCategoryDoc) => {
+    const newDescription = newDescriptions[category.id]?.trim();
+    if (!newDescription) return;
+
+    setIsUpdatingDesc(prev => ({ ...prev, [category.id]: true }));
+    const updatedDescriptions = [...(category.descriptions || []), newDescription];
+    const result = await updateExpenseCategory(category.id, { descriptions: updatedDescriptions });
+    
+    if (result.success) {
+      toast({ title: "Sukses", description: "Deskripsi default ditambahkan." });
+      handleDescriptionChange(category.id, '');
+    } else {
+      toast({ variant: "destructive", title: "Error", description: result.message });
+    }
+    setIsUpdatingDesc(prev => ({ ...prev, [category.id]: false }));
+  };
+
+  const handleDeleteDescription = async (category: ExpenseCategoryDoc, descriptionToDelete: string) => {
+    setIsUpdatingDesc(prev => ({ ...prev, [category.id]: true }));
+    const updatedDescriptions = (category.descriptions || []).filter(d => d !== descriptionToDelete);
+    const result = await updateExpenseCategory(category.id, { descriptions: updatedDescriptions });
+    
+    if (result.success) {
+      toast({ title: "Sukses", description: "Deskripsi default dihapus." });
+    } else {
+      toast({ variant: "destructive", title: "Error", description: result.message });
+    }
+    setIsUpdatingDesc(prev => ({ ...prev, [category.id]: false }));
+  };
 
   const handleOpenForm = (category?: ExpenseCategoryDoc) => {
     setSelectedCategory(category);
@@ -58,9 +98,9 @@ export function CategorySettingsClient({ initialCategories }: CategorySettingsPr
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Kategori Pengeluaran</CardTitle>
+          <CardTitle>Kategori & Deskripsi Pengeluaran</CardTitle>
           <CardDescription>
-            Atur kategori untuk pencatatan pengeluaran Anda.
+            Atur kategori dan deskripsi default untuk mempercepat pencatatan.
           </CardDescription>
         </div>
         <CategoryFormDialog
@@ -78,39 +118,70 @@ export function CategorySettingsClient({ initialCategories }: CategorySettingsPr
         </CategoryFormDialog>
       </CardHeader>
       <CardContent>
-        <div className="flow-root">
-          <ul role="list" className="divide-y divide-border">
+        {initialCategories.length > 0 ? (
+          <Accordion type="multiple" className="w-full">
             {initialCategories.map((category) => (
-              <li key={category.id} className="flex items-center justify-between gap-4 py-3">
-                <span className="text-sm font-medium">{category.name}</span>
-                <div className="space-x-2">
-                  <CategoryFormDialog
-                    open={isFormOpen && selectedCategory?.id === category.id}
-                    onOpenChange={(isOpen) => {
-                        if (!isOpen) setSelectedCategory(undefined);
-                        setIsFormOpen(isOpen);
-                    }}
-                    category={category}
-                  >
-                    <Button variant="ghost" size="icon" onClick={() => handleOpenForm(category)}>
-                      <Pencil className="h-4 w-4" />
-                      <span className="sr-only">Edit {category.name}</span>
+              <AccordionItem value={category.id} key={category.id}>
+                <AccordionTrigger className="hover:no-underline">
+                  <div className="flex-1 text-left font-medium">{category.name}</div>
+                  <div className="space-x-1" onClick={(e) => e.stopPropagation()}>
+                    <CategoryFormDialog
+                      open={isFormOpen && selectedCategory?.id === category.id}
+                      onOpenChange={(isOpen) => {
+                          if (!isOpen) setSelectedCategory(undefined);
+                          setIsFormOpen(isOpen);
+                      }}
+                      category={category}
+                    >
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenForm(category)}>
+                        <Pencil className="h-4 w-4" />
+                        <span className="sr-only">Edit {category.name}</span>
+                      </Button>
+                    </CategoryFormDialog>
+                    <Button variant="ghost" size="icon" onClick={() => handleOpenDeleteAlert(category)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                      <span className="sr-only">Hapus {category.name}</span>
                     </Button>
-                  </CategoryFormDialog>
-                  <Button variant="ghost" size="icon" onClick={() => handleOpenDeleteAlert(category)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                    <span className="sr-only">Hapus {category.name}</span>
-                  </Button>
-                </div>
-              </li>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-4 pt-2">
+                    <p className="text-sm text-muted-foreground">Deskripsi default untuk kategori ini:</p>
+                    {category.descriptions && category.descriptions.length > 0 ? (
+                      <ul className="space-y-2">
+                        {category.descriptions.map((desc, index) => (
+                          <li key={index} className="flex items-center justify-between text-sm p-2 rounded-md bg-muted/50">
+                            <span>{desc}</span>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteDescription(category, desc)} disabled={isUpdatingDesc[category.id]}>
+                              <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-center text-muted-foreground py-2">Belum ada deskripsi default.</p>
+                    )}
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Tambah deskripsi baru..."
+                        value={newDescriptions[category.id] || ''}
+                        onChange={(e) => handleDescriptionChange(category.id, e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleAddDescription(category)}
+                      />
+                      <Button onClick={() => handleAddDescription(category)} disabled={!newDescriptions[category.id] || isUpdatingDesc[category.id]}>
+                        {isUpdatingDesc[category.id] ? <Loader2 className="h-4 w-4 animate-spin"/> : "Tambah"}
+                      </Button>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
             ))}
-             {initialCategories.length === 0 && (
-                <li className="text-center text-sm text-muted-foreground py-4">
-                    Belum ada kategori.
-                </li>
-            )}
-          </ul>
-        </div>
+          </Accordion>
+        ) : (
+          <div className="text-center text-sm text-muted-foreground py-4">
+            Belum ada kategori.
+          </div>
+        )}
         
         <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
             <AlertDialogContent>

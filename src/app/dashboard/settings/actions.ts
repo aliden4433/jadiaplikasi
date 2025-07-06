@@ -1,3 +1,4 @@
+
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -29,7 +30,7 @@ export async function getExpenseCategories(): Promise<ExpenseCategoryDoc[]> {
 export async function addExpenseCategory(name: string) {
   try {
     const categoriesCol = collection(db, CATEGORIES_COLLECTION);
-    await addDoc(categoriesCol, { name });
+    await addDoc(categoriesCol, { name, descriptions: [] });
     revalidatePath("/dashboard/settings");
     revalidatePath("/dashboard/expenses");
     return { success: true, message: "Kategori berhasil ditambahkan." };
@@ -39,10 +40,10 @@ export async function addExpenseCategory(name: string) {
   }
 }
 
-export async function updateExpenseCategory(id: string, name: string) {
+export async function updateExpenseCategory(id: string, data: { name?: string; descriptions?: string[] }) {
   try {
     const categoryRef = doc(db, CATEGORIES_COLLECTION, id);
-    await updateDoc(categoryRef, { name });
+    await updateDoc(categoryRef, data);
     revalidatePath("/dashboard/settings");
     revalidatePath("/dashboard/expenses");
     return { success: true, message: "Kategori berhasil diperbarui." };
