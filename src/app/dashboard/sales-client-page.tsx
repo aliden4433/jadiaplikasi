@@ -29,12 +29,11 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { SalesImportButton } from "./sales/sales-import-button"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { Calendar } from "@/components/ui/calendar"
 import { ProductVariantDialog } from "./sales/product-variant-dialog"
-import { ExpenseFormDialog } from "./expenses/expense-form-dialog"
+import { ExpenseFormDialog } from "../expenses/expense-form-dialog"
 
 interface SalesClientPageProps {
   products: Product[]
@@ -136,16 +135,6 @@ export function SalesClientPage({ products, sales, categories }: SalesClientPage
         description: `${product.name} telah ditambahkan ke keranjang.`,
       })
     }
-  }
-
-  const handleImportSuccess = (itemsFromPdf: CartItem[]) => {
-    itemsFromPdf.forEach(item => {
-        addToCart(item.product, item.quantity, false);
-    });
-    toast({
-        title: "Impor Selesai",
-        description: `${itemsFromPdf.length} item produk dari PDF telah ditambahkan ke keranjang.`
-    })
   }
 
   const updateQuantity = (productId: string, quantity: number) => {
@@ -386,7 +375,6 @@ export function SalesClientPage({ products, sales, categories }: SalesClientPage
                         Tambah Pengeluaran
                     </Button>
                 </ExpenseFormDialog>
-                <SalesImportButton onImportSuccess={handleImportSuccess} products={products} />
             </div>
             <Input
                 placeholder="Cari produk..."
@@ -500,7 +488,6 @@ export function SalesClientPage({ products, sales, categories }: SalesClientPage
                         Pengeluaran
                     </Button>
                 </ExpenseFormDialog>
-                <SalesImportButton onImportSuccess={handleImportSuccess} products={products} />
                 <Input
                     placeholder="Cari produk..."
                     value={searchTerm}

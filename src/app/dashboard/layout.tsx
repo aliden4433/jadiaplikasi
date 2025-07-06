@@ -3,7 +3,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart2, BrainCircuit, History, LogOut, Package, ShoppingCart, UserCircle, PanelLeft, Settings, Wallet } from "lucide-react"
+import { BarChart2, History, LogOut, Package, ShoppingCart, UserCircle, PanelLeft, Settings, Wallet } from "lucide-react"
 
 import {
   Sidebar,
@@ -28,7 +28,6 @@ const allNavItems = [
   { href: "/dashboard/sales-history", icon: History, label: "Riwayat Penjualan" },
   { href: "/dashboard/expenses", icon: Wallet, label: "Pengeluaran", roles: ["admin", "cashier"] },
   { href: "/dashboard/reports", icon: BarChart2, label: "Laporan", roles: ["admin"] },
-  { href: "/dashboard/inventory", icon: BrainCircuit, label: "Inventaris AI", roles: ["admin"] },
   { href: "/dashboard/settings", icon: Settings, label: "Pengaturan", roles: ["admin"] },
 ];
 

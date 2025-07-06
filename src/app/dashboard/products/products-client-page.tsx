@@ -9,7 +9,6 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { ProductFormDialog } from "./product-form-dialog"
 import { Button } from "@/components/ui/button"
 import { PlusCircle } from "lucide-react"
-import { ImportButton } from "./import-button"
 import { ExportButton } from "./export-button"
 import { useAuth } from "@/hooks/use-auth"
 import type { ColumnDef } from "@tanstack/react-table"
@@ -37,7 +36,6 @@ export function ProductsClientPage({ products }: ProductsClientPageProps) {
     return (
         <div className="space-y-4">
             <div className="flex justify-end gap-2 flex-wrap">
-                {userRole === 'admin' && <ImportButton />}
                 <ExportButton products={products} />
                 {userRole === 'admin' && !isMobile && (
                     <ProductFormDialog>

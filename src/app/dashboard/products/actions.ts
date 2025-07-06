@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache"
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, writeBatch } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import type { Product } from "@/lib/types"
-import { extractProducts as extractProductsFromPdfFlow, type ExtractProductsOutput } from "@/ai/flows/extract-products-from-pdf-flow"
 
 export async function getProducts(): Promise<Product[]> {
   const productsCol = collection(db, "products")
@@ -37,35 +36,6 @@ export async function duplicateProduct(product: Omit<Product, "id">) {
   } catch (error) {
     console.error("Error duplicating product: ", error)
     return { success: false, message: "Gagal menduplikasi produk." }
-  }
-}
-
-export async function extractProducts(pdfDataUri: string): Promise<ExtractProductsOutput> {
-  try {
-    const result = await extractProductsFromPdfFlow({ pdfDataUri });
-    return result;
-  } catch (error) {
-    console.error("Error extracting products from PDF:", error);
-    throw new Error("Gagal mengekstrak produk dari PDF. Silakan coba lagi.");
-  }
-}
-
-export async function addProductsBatch(products: Omit<Product, "id">[]) {
-  try {
-    const productsCol = collection(db, "products");
-    const batch = writeBatch(db);
-
-    products.forEach((product) => {
-      const docRef = doc(productsCol); // Automatically generate unique ID
-      batch.set(docRef, product);
-    });
-
-    await batch.commit();
-    revalidatePath("/dashboard/products");
-    return { success: true, message: "Produk berhasil diimpor." };
-  } catch (error) {
-    console.error("Error adding products in batch: ", error);
-    return { success: false, message: "Gagal mengimpor produk." };
   }
 }
 
