@@ -322,7 +322,7 @@ export function SalesClientPage({ products, sales }: SalesClientPageProps) {
             </div>
             <div className="flex justify-between">
               <p>Subtotal</p>
-              <p>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(subtotal)}</p>
+              <p>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(subtotal)}</p>
             </div>
             <div className="flex justify-between items-center">
               <p>Diskon</p>
@@ -331,13 +331,13 @@ export function SalesClientPage({ products, sales }: SalesClientPageProps) {
             {discount > 0 && (
               <div className="flex justify-between text-sm text-muted-foreground">
                 <p>Potongan Diskon</p>
-                <p>-{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(discountAmount)}</p>
+                <p>-{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(discountAmount)}</p>
               </div>
             )}
             <Separator />
             <div className="flex justify-between font-bold text-lg">
               <p>Total</p>
-              <p>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(total)}</p>
+              <p>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(total)}</p>
             </div>
           </div>
           <CardFooter className="p-4 pt-0">
@@ -345,7 +345,7 @@ export function SalesClientPage({ products, sales }: SalesClientPageProps) {
                 {isProcessing ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : null}
-                {isProcessing ? "Memproses..." : `Catat Transaksi (${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(total)})`}
+                {isProcessing ? "Memproses..." : `Catat Transaksi (${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(total)})`}
               </Button>
           </CardFooter>
         </>
@@ -377,13 +377,13 @@ export function SalesClientPage({ products, sales }: SalesClientPageProps) {
     return (
       <>
         <div className="space-y-4">
-           <div className="flex items-center gap-2 w-full md:w-auto">
+           <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
                 <SalesImportButton onImportSuccess={handleImportSuccess} products={products} />
                 <Input
                     placeholder="Cari produk..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full md:w-64"
+                    className="w-full"
                 />
             </div>
             <Select value={sortOrder} onValueChange={setSortOrder}>
@@ -430,7 +430,7 @@ export function SalesClientPage({ products, sales }: SalesClientPageProps) {
                                     </Badge>
                                 ) : (
                                     <p className="font-semibold text-sm text-foreground">
-                                        {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(group[0].price)}
+                                        {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(group[0].price)}
                                     </p>
                                 )}
                             </div>
@@ -443,7 +443,7 @@ export function SalesClientPage({ products, sales }: SalesClientPageProps) {
                            {!hasVariants && (
                             <div className="flex justify-between w-full">
                                 <span>Harga:</span>
-                                <span>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(group[0].price)}</span>
+                                <span>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(group[0].price)}</span>
                             </div>
                            )}
                         </div>
@@ -537,7 +537,7 @@ export function SalesClientPage({ products, sales }: SalesClientPageProps) {
                                     <Badge variant="outline">{group.length} Varian</Badge>
                                 ) : (
                                     <p className="font-semibold text-sm text-foreground">
-                                        {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(group[0].price)}
+                                        {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(group[0].price)}
                                     </p>
                                 )}
                             </div>

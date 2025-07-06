@@ -39,7 +39,7 @@ export function ProductsClientPage({ products }: ProductsClientPageProps) {
             <div className="flex justify-end gap-2 flex-wrap">
                 {userRole === 'admin' && <ImportButton />}
                 <ExportButton products={products} />
-                {userRole === 'admin' && isMobile === false && (
+                {userRole === 'admin' && !isMobile && (
                     <ProductFormDialog>
                         <Button>
                             <PlusCircle className="mr-2 h-4 w-4" />
@@ -55,7 +55,7 @@ export function ProductsClientPage({ products }: ProductsClientPageProps) {
               filterColumnId="name"
               filterPlaceholder="Filter produk..."
             />
-            {userRole === 'admin' && isMobile === true && (
+            {userRole === 'admin' && isMobile && (
                 <ProductFormDialog>
                     <Button
                         className="fixed bottom-8 right-8 rounded-full h-16 w-16 shadow-lg z-20"

@@ -185,7 +185,7 @@ export function SalesHistoryList({ sales: initialSales, expenses: initialExpense
                   Berikut adalah daftar transaksi yang telah tercatat.
                 </CardDescription>
               </div>
-              <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
                  <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -260,7 +260,7 @@ export function SalesHistoryList({ sales: initialSales, expenses: initialExpense
                   <AccordionItem value={sale.id} key={sale.id} className="border-b-0 rounded-lg border overflow-hidden bg-card">
                     <div className="flex w-full items-center group transition-colors hover:bg-accent/50 data-[state=open]:bg-accent/50">
                       {userRole === 'admin' && (
-                        <div className="pl-4">
+                        <div className="pl-4 pr-2 sm:pr-4">
                           <Checkbox
                             checked={selectedSales.includes(sale.id)}
                             onCheckedChange={(checked) => handleSelectSale(sale.id, checked as boolean)}
@@ -270,7 +270,7 @@ export function SalesHistoryList({ sales: initialSales, expenses: initialExpense
                         </div>
                       )}
                       <AccordionPrimitive.Header className="flex-grow">
-                          <AccordionPrimitive.Trigger className={cn("flex w-full flex-1 items-center justify-between p-4 font-medium text-left", "hover:no-underline focus:outline-none")}>
+                          <AccordionPrimitive.Trigger className={cn("flex w-full flex-1 items-center justify-between p-4 font-medium text-left", userRole !== 'admin' && "pl-4", "hover:no-underline focus:outline-none")}>
                             <div className="flex items-center gap-4">
                               <div className="text-left">
                                 <p className="font-semibold">{sale.transactionId || 'No ID'}</p>

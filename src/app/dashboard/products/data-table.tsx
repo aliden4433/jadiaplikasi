@@ -13,6 +13,8 @@ import {
   type ColumnFiltersState,
   type RowSelectionState,
 } from "@tanstack/react-table"
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
 
 import {
   Table,
@@ -24,11 +26,14 @@ import {
 } from "@/components/ui/table"
 import { DataTableToolbar } from "./data-table-toolbar"
 import { useIsMobile } from "@/hooks/use-mobile"
-import type { Product, AppUser } from "@/lib/types"
+import type { Product, AppUser, Expense, ExpenseCategoryDoc } from "@/lib/types"
 import { Card, CardContent } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Badge } from "@/components/ui/badge";
 import { ProductRowActions } from "./product-row-actions"
 import { ProductFormDialog } from "./product-form-dialog"
+import { ExpenseRowActions } from "@/app/dashboard/expenses/expense-row-actions"
+import { ExpenseFormDialog } from "@/app/dashboard/expenses/expense-form-dialog"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -36,9 +41,10 @@ interface DataTableProps<TData, TValue> {
   userRole?: AppUser['role']
   filterColumnId?: string
   filterPlaceholder?: string
+  categories?: ExpenseCategoryDoc[]
 }
 
-const MobileCard = ({ row, userRole }: { row: any, userRole?: AppUser['role'] }) => {
+const ProductMobileCard = ({ row, userRole }: { row: any, userRole?: AppUser['role'] }) => {
   const product = row.original as Product
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false)
 
@@ -59,12 +65,11 @@ const MobileCard = ({ row, userRole }: { row: any, userRole?: AppUser['role'] })
       <Card key={row.id} data-state={row.getIsSelected() && "selected"} className="bg-card">
         <CardContent className="p-4 flex gap-4 items-start">
            {userRole === 'admin' && (
-              <div>
+              <div className="pt-1">
                 <Checkbox
                   checked={row.getIsSelected()}
                   onCheckedChange={(value) => row.toggleSelected(!!value)}
                   aria-label="Select row"
-                  className="mt-1"
                 />
               </div>
            )}
@@ -111,12 +116,76 @@ const MobileCard = ({ row, userRole }: { row: any, userRole?: AppUser['role'] })
   )
 }
 
+const ExpenseMobileCard = ({ row, userRole, categories = [] }: { row: any, userRole?: AppUser['role'], categories?: ExpenseCategoryDoc[] }) => {
+    const expense = row.original as Expense
+    const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false)
+
+    return (
+        <>
+            {userRole === 'admin' && (
+                <ExpenseFormDialog
+                    expense={expense}
+                    categories={categories}
+                    open={isEditDialogOpen}
+                    onOpenChange={setIsEditDialogOpen}
+                />
+            )}
+            <Card key={row.id} className="bg-card">
+                <CardContent className="p-4 flex gap-4 items-start">
+                    <div className="flex-grow space-y-2 overflow-hidden">
+                        <div className="flex justify-between items-start">
+                             <button
+                                onClick={() => userRole === 'admin' && setIsEditDialogOpen(true)}
+                                disabled={userRole !== 'admin'}
+                                className="font-semibold pr-2 break-words text-left hover:underline disabled:no-underline disabled:cursor-text"
+                            >
+                                {expense.description}
+                            </button>
+                            {userRole === 'admin' && (
+                                <div className="-mt-2 -mr-2 flex-shrink-0">
+                                <ExpenseRowActions expense={expense} categories={categories} />
+                                </div>
+                            )}
+                        </div>
+                        <div className="text-sm text-muted-foreground space-y-1">
+                            <div className="flex justify-between">
+                                <span>Tanggal</span>
+                                <span className="font-medium text-foreground">{format(new Date(expense.date), "d MMM yyyy", { locale: id })}</span>
+                            </div>
+                             <div className="flex justify-between">
+                                <span>Kategori</span>
+                                <Badge variant="outline">{expense.category}</Badge>
+                            </div>
+                            <div className="flex justify-between">
+                                <span>Jumlah</span>
+                                <span className="font-medium text-foreground">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(expense.amount)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </>
+    )
+}
+
+const MobileCard = ({ row, userRole, categories }: { row: any, userRole?: AppUser['role'], categories?: ExpenseCategoryDoc[] }) => {
+    const data = row.original;
+    const isExpense = 'amount' in data && 'category' in data;
+
+    if (isExpense) {
+        return <ExpenseMobileCard row={row} userRole={userRole} categories={categories} />;
+    }
+    return <ProductMobileCard row={row} userRole={userRole} />;
+};
+
+
 export function DataTable<TData, TValue>({
   columns,
   data,
   userRole,
   filterColumnId,
   filterPlaceholder,
+  categories = [],
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -141,7 +210,6 @@ export function DataTable<TData, TValue>({
   })
 
   // Mobile card view. `isMobile` is false on first render, so this avoids hydration errors.
-  // There will be a flash of the table view before this renders on mobile.
   if (isMobile) {
     return (
       <div className="space-y-4">
@@ -153,7 +221,7 @@ export function DataTable<TData, TValue>({
         />
         <div className="space-y-4 pb-4">
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => <MobileCard key={row.id} row={row} userRole={userRole} />)
+              table.getRowModel().rows.map((row) => <MobileCard key={row.id} row={row} userRole={userRole} categories={categories} />)
             ) : (
               <Card>
                 <CardContent className="h-24 flex items-center justify-center text-muted-foreground">
