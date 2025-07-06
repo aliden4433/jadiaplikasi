@@ -24,16 +24,17 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import type { Expense } from "@/lib/types";
+import type { Expense, ExpenseCategoryDoc } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { deleteExpense } from "./actions";
 import { ExpenseFormDialog } from "./expense-form-dialog";
 
 interface ExpenseRowActionsProps {
   expense: Expense;
+  categories: ExpenseCategoryDoc[];
 }
 
-export function ExpenseRowActions({ expense }: ExpenseRowActionsProps) {
+export function ExpenseRowActions({ expense, categories }: ExpenseRowActionsProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -66,10 +67,14 @@ export function ExpenseRowActions({ expense }: ExpenseRowActionsProps) {
 
   return (
     <>
-      <ExpenseFormDialog expense={expense}>
-        <div style={{display: isEditDialogOpen ? 'block' : 'none'}}>
-            <button onClick={() => setIsEditDialogOpen(true)}></button>
-        </div>
+      <ExpenseFormDialog
+        expense={expense}
+        categories={categories}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+      >
+        {/* Empty trigger, dialog is controlled by state */}
+        <></>
       </ExpenseFormDialog>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -99,12 +104,10 @@ export function ExpenseRowActions({ expense }: ExpenseRowActionsProps) {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Aksi</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <ExpenseFormDialog expense={expense}>
-             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                <Pencil className="mr-2 h-4 w-4" />
-                <span>Edit</span>
-            </DropdownMenuItem>
-          </ExpenseFormDialog>
+          <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
+            <Pencil className="mr-2 h-4 w-4" />
+            <span>Edit</span>
+          </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => setIsDeleteDialogOpen(true)}
             className="text-red-600 focus:bg-red-50 focus:text-red-600"

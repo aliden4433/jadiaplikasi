@@ -7,11 +7,11 @@ import { format } from "date-fns";
 import { id } from "date-fns/locale";
 
 import { Button } from "@/components/ui/button";
-import type { Expense } from "@/lib/types";
+import type { Expense, ExpenseCategoryDoc } from "@/lib/types";
 import { ExpenseRowActions } from "./expense-row-actions";
 import { Badge } from "@/components/ui/badge";
 
-export const columns: ColumnDef<Expense>[] = [
+export const getColumns = (categories: ExpenseCategoryDoc[]): ColumnDef<Expense>[] => [
   {
     accessorKey: "date",
     header: ({ column }) => {
@@ -88,7 +88,7 @@ export const columns: ColumnDef<Expense>[] = [
       const expense = row.original;
       return (
         <div className="text-right">
-          <ExpenseRowActions expense={expense} />
+          <ExpenseRowActions expense={expense} categories={categories} />
         </div>
       );
     },

@@ -39,16 +39,12 @@ export type AppUser = {
   role: "admin" | "cashier"
 }
 
-export const expenseCategories = [
-  "Stok Barang",
-  "Operasional",
-  "Gaji",
-  "Marketing",
-  "Sewa",
-  "Lainnya",
-] as const;
+export type ExpenseCategoryDoc = {
+  id: string;
+  name: string;
+};
 
-export type ExpenseCategory = typeof expenseCategories[number];
+export type ExpenseCategory = string;
 
 export type Expense = {
   id: string;

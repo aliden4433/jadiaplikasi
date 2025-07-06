@@ -39,16 +39,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
 import { addExpense, updateExpense } from "./actions";
-import type { Expense, ExpenseCategory } from "@/lib/types";
-import { expenseCategories } from "@/lib/types";
+import type { Expense, ExpenseCategoryDoc } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
   description: z.string().min(1, "Deskripsi tidak boleh kosong."),
   amount: z.coerce.number().min(1, "Jumlah harus lebih dari 0."),
-  category: z.enum(expenseCategories, {
-    errorMap: () => ({ message: "Harap pilih kategori yang valid." }),
-  }),
+  category: z.string({ required_error: "Harap pilih kategori." }).min(1, "Harap pilih kategori."),
   date: z.date({
     required_error: "Tanggal tidak boleh kosong.",
   }),
@@ -57,26 +54,35 @@ const formSchema = z.object({
 interface ExpenseFormDialogProps {
   expense?: Expense;
   children: React.ReactNode;
+  categories: ExpenseCategoryDoc[];
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function ExpenseFormDialog({ expense, children }: ExpenseFormDialogProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function ExpenseFormDialog({ expense, children, categories, open: openProp, onOpenChange: onOpenChangeProp }: ExpenseFormDialogProps) {
+  // Allow component to be controlled or uncontrolled
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = openProp !== undefined ? openProp : internalOpen;
+  const setOpen = onOpenChangeProp !== undefined ? onOpenChangeProp : setInternalOpen;
+  
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const isEditMode = !!expense;
+
+  const defaultCategory = categories.length > 0 ? categories[0].name : "";
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       description: "",
       amount: 0,
-      category: "Lainnya",
+      category: defaultCategory,
       date: new Date(),
     },
   });
 
   useEffect(() => {
-    if (isOpen) {
+    if (open) {
       if (isEditMode && expense) {
         form.reset({
             ...expense,
@@ -86,12 +92,12 @@ export function ExpenseFormDialog({ expense, children }: ExpenseFormDialogProps)
         form.reset({
           description: "",
           amount: 0,
-          category: "Lainnya",
+          category: defaultCategory,
           date: new Date(),
         });
       }
     }
-  }, [expense, isEditMode, isOpen, form]);
+  }, [expense, isEditMode, open, form, defaultCategory]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
@@ -115,7 +121,7 @@ export function ExpenseFormDialog({ expense, children }: ExpenseFormDialogProps)
           title: "Sukses",
           description: result.message,
         });
-        setIsOpen(false);
+        setOpen(false);
       } else {
         throw new Error(result.message);
       }
@@ -131,7 +137,7 @@ export function ExpenseFormDialog({ expense, children }: ExpenseFormDialogProps)
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
@@ -182,8 +188,8 @@ export function ExpenseFormDialog({ expense, children }: ExpenseFormDialogProps)
                             </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                            {expenseCategories.map(cat => (
-                                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                            {categories.map(cat => (
+                                <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
@@ -234,7 +240,7 @@ export function ExpenseFormDialog({ expense, children }: ExpenseFormDialogProps)
               )}
             />
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isLoading}>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
                 Batal
               </Button>
               <Button type="submit" disabled={isLoading}>
