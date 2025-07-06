@@ -83,6 +83,7 @@ export function ExpenseFormDialog({ expense, children, categories, open: openPro
   });
 
   const watchedCategory = form.watch("category");
+  const watchedDescription = form.watch("description");
 
   const descriptionOptions = useMemo(() => {
     const selectedCat = categories.find(c => c.name === watchedCategory);
@@ -117,6 +118,18 @@ export function ExpenseFormDialog({ expense, children, categories, open: openPro
       }
     }
   }, [watchedCategory, isEditMode, open, categories, form]);
+
+  useEffect(() => {
+    // Only auto-fill price on create mode and when description changes
+    if (!isEditMode && open && watchedDescription) {
+      const descriptionLower = watchedDescription.toLowerCase();
+      if (descriptionLower.includes("lakban")) {
+        form.setValue("amount", 45000);
+      } else if (descriptionLower.includes("thermal")) {
+        form.setValue("amount", 17000);
+      }
+    }
+  }, [watchedDescription, isEditMode, open, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
