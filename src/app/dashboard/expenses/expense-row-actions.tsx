@@ -72,10 +72,7 @@ export function ExpenseRowActions({ expense, categories }: ExpenseRowActionsProp
         categories={categories}
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
-      >
-        {/* Empty trigger, dialog is controlled by state */}
-        <></>
-      </ExpenseFormDialog>
+      />
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>

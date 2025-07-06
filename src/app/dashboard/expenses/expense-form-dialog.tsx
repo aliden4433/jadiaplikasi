@@ -53,7 +53,7 @@ const formSchema = z.object({
 
 interface ExpenseFormDialogProps {
   expense?: Expense;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   categories: ExpenseCategoryDoc[];
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -138,7 +138,7 @@ export function ExpenseFormDialog({ expense, children, categories, open: openPro
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>{isEditMode ? "Edit Pengeluaran" : "Tambah Pengeluaran Baru"}</DialogTitle>
