@@ -15,7 +15,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ReceiptText, Trash2, Loader2, Calendar as CalendarIcon, ChevronDown } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -258,7 +258,7 @@ export function SalesHistoryList({ sales: initialSales, expenses: initialExpense
               <Accordion type="single" collapsible className="w-full space-y-4">
                 {filteredSales.map((sale) => (
                   <AccordionItem value={sale.id} key={sale.id} className="border-b-0 rounded-lg border overflow-hidden bg-card">
-                    <AccordionPrimitive.Header className="flex w-full items-center group transition-colors hover:bg-accent/50 data-[state=open]:bg-accent/50">
+                    <div className="flex w-full items-center group transition-colors hover:bg-accent/50 data-[state=open]:bg-accent/50">
                       {userRole === 'admin' && (
                         <div className="pl-4">
                           <Checkbox
@@ -269,20 +269,22 @@ export function SalesHistoryList({ sales: initialSales, expenses: initialExpense
                           />
                         </div>
                       )}
-                      <AccordionPrimitive.Trigger className={cn("flex flex-1 items-center justify-between p-4 font-medium text-left", "hover:no-underline focus:outline-none")}>
-                        <div className="flex items-center gap-4">
-                          <div className="text-left">
-                            <p className="font-semibold">{sale.transactionId || 'No ID'}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {format(new Date(sale.date), "d MMM yyyy, HH:mm", { locale: id })}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <p className="font-bold text-base text-primary">{formatCurrency(sale.total)}</p>
-                            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                        </div>
-                      </AccordionPrimitive.Trigger>
+                      <AccordionPrimitive.Header className="flex-grow">
+                          <AccordionPrimitive.Trigger className={cn("flex w-full flex-1 items-center justify-between p-4 font-medium text-left", "hover:no-underline focus:outline-none")}>
+                            <div className="flex items-center gap-4">
+                              <div className="text-left">
+                                <p className="font-semibold">{sale.transactionId || 'No ID'}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {format(new Date(sale.date), "d MMM yyyy, HH:mm", { locale: id })}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <p className="font-bold text-base text-primary">{formatCurrency(sale.total)}</p>
+                                <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                            </div>
+                          </AccordionPrimitive.Trigger>
+                      </AccordionPrimitive.Header>
                       {userRole === 'admin' && (
                         <div className="pr-4">
                             <div
@@ -308,7 +310,7 @@ export function SalesHistoryList({ sales: initialSales, expenses: initialExpense
                             </div>
                         </div>
                       )}
-                    </AccordionPrimitive.Header>
+                    </div>
                     <AccordionContent className="px-4 pt-2 pb-4 bg-secondary/30 border-t">
                       <div className="space-y-3 pt-3">
                         {sale.items.map((item, index) => (
