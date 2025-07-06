@@ -59,13 +59,16 @@ export function ReportsClientPage({ initialSales, products, initialExpenses }: R
     })
   }, [initialExpenses, date])
 
-  const { revenue, count, profit, totalExpenses } = useMemo(() => {
+  const { revenue, count, netProfit, totalExpenses } = useMemo(() => {
     const revenue = filteredSales.reduce((acc, sale) => acc + sale.total, 0)
-    const grossProfit = filteredSales.reduce((acc, sale) => acc + (sale.profit || 0), 0)
+    const salesProfit = filteredSales.reduce((acc, sale) => acc + (sale.profit || 0), 0)
     const count = filteredSales.length
     const totalExpenses = filteredExpenses.reduce((acc, expense) => acc + expense.amount, 0)
-    const profit = grossProfit - totalExpenses
-    return { revenue, count, profit, totalExpenses }
+    
+    // Net Profit is calculated by subtracting total expenses from the profit made on sales.
+    const netProfit = salesProfit - totalExpenses
+    
+    return { revenue, count, netProfit, totalExpenses }
   }, [filteredSales, filteredExpenses])
   
   const bestsellers = useMemo(() => {
@@ -162,9 +165,9 @@ export function ReportsClientPage({ initialSales, products, initialExpenses }: R
           <CardContent>
             <div className={cn(
               "text-xl font-bold",
-              profit < 0 && "text-destructive"
+              netProfit < 0 && "text-destructive"
             )}>
-              {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(profit)}
+              {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(netProfit)}
             </div>
             <p className="text-xs text-muted-foreground">Pendapatan dikurangi pengeluaran</p>
           </CardContent>
