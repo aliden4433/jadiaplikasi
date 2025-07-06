@@ -2,13 +2,14 @@
 "use client";
 
 import { useState } from "react";
+import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlusCircle, Trash2, Pencil, Loader2, ChevronsUpDown } from "lucide-react";
+import { PlusCircle, Trash2, Pencil, Loader2, ChevronDown } from "lucide-react";
 import type { ExpenseCategoryDoc } from "@/lib/types";
 import { CategoryFormDialog } from "./category-form-dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
 import { deleteExpenseCategory, updateExpenseCategory } from "./actions";
 import { Input } from "@/components/ui/input";
@@ -122,9 +123,12 @@ export function CategorySettingsClient({ initialCategories }: CategorySettingsPr
           <Accordion type="multiple" className="w-full">
             {initialCategories.map((category) => (
               <AccordionItem value={category.id} key={category.id}>
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="flex-1 text-left font-medium">{category.name}</div>
-                  <div className="space-x-1" onClick={(e) => e.stopPropagation()}>
+                <AccordionPrimitive.Header className="flex w-full items-center">
+                  <AccordionPrimitive.Trigger className="flex flex-1 items-center justify-between py-4 pr-2 font-medium transition-all hover:no-underline [&[data-state=open]>svg]:rotate-180">
+                    {category.name}
+                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+                  </AccordionPrimitive.Trigger>
+                  <div className="pl-2 pr-4 space-x-1">
                     <CategoryFormDialog
                       open={isFormOpen && selectedCategory?.id === category.id}
                       onOpenChange={(isOpen) => {
@@ -143,7 +147,7 @@ export function CategorySettingsClient({ initialCategories }: CategorySettingsPr
                       <span className="sr-only">Hapus {category.name}</span>
                     </Button>
                   </div>
-                </AccordionTrigger>
+                </AccordionPrimitive.Header>
                 <AccordionContent>
                   <div className="space-y-4 pt-2">
                     <p className="text-sm text-muted-foreground">Deskripsi default untuk kategori ini:</p>
