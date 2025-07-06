@@ -1,12 +1,24 @@
 
 "use client"
 
+import { useState } from "react"
 import * as XLSX from "xlsx"
 import { FileDown } from "lucide-react"
 import { format } from "date-fns"
 
 import type { Sale, Expense } from "@/lib/types"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 interface ExportSalesButtonProps {
   sales: Sale[]
@@ -15,6 +27,9 @@ interface ExportSalesButtonProps {
 }
 
 export function ExportSalesButton({ sales, expenses, disabled }: ExportSalesButtonProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [filename, setFilename] = useState("Laporan_Laba_Rugi_dan_Pengeluaran")
+
   const handleExport = () => {
     // 1. Define Sales Headers
     const salesHeaders = [
@@ -156,20 +171,65 @@ export function ExportSalesButton({ sales, expenses, disabled }: ExportSalesButt
 
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, "Laporan Laba Rugi")
+    
+    const finalFilename = `${filename || "Laporan_Laba_Rugi_dan_Pengeluaran"}.xlsx`;
 
     // 9. Trigger Download
-    XLSX.writeFile(wb, "Laporan_Laba_Rugi_dan_Pengeluaran.xlsx")
+    XLSX.writeFile(wb, finalFilename)
+
+    setIsOpen(false);
   }
 
   return (
-    <Button
-      variant="outline"
-      onClick={handleExport}
-      disabled={disabled || (sales.length === 0 && expenses.length === 0)}
-      className="w-full sm:w-auto"
-    >
-      <FileDown className="mr-2 h-4 w-4" />
-      Export Excel
-    </Button>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant="outline"
+          disabled={disabled || (sales.length === 0 && expenses.length === 0)}
+          className="w-full sm:w-auto"
+        >
+          <FileDown className="mr-2 h-4 w-4" />
+          Export Excel
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Konfirmasi Ekspor</DialogTitle>
+          <DialogDescription>
+            Tinjau detail di bawah dan atur nama file sebelum mengunduh.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+            <div className="rounded-md border p-4">
+                <p className="font-medium">Data yang akan diekspor</p>
+                <ul className="list-disc pl-5 mt-2 text-sm text-muted-foreground">
+                    <li><span className="font-semibold text-foreground">{sales.length}</span> transaksi penjualan</li>
+                    <li><span className="font-semibold text-foreground">{expenses.length}</span> catatan pengeluaran</li>
+                </ul>
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="filename">Nama File</Label>
+                <div className="flex items-center">
+                    <Input 
+                        id="filename" 
+                        value={filename}
+                        onChange={(e) => setFilename(e.target.value)}
+                        className="rounded-r-none focus-visible:ring-offset-0 focus-visible:ring-1"
+                    />
+                    <span className="inline-flex items-center h-10 px-3 text-sm bg-muted rounded-r-md border border-l-0">.xlsx</span>
+                </div>
+            </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setIsOpen(false)}>Batal</Button>
+          <Button onClick={handleExport} disabled={!filename.trim()}>
+            <FileDown className="mr-2 h-4 w-4" />
+            Export
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
