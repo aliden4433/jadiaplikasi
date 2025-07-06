@@ -386,7 +386,7 @@ export function SalesHistoryList({ sales: initialSales, expenses: initialExpense
           <AlertDialogHeader>
             <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
             <AlertDialogDescription>
-              Tindakan ini tidak akan menghapus {salesForDeletion.length} transaksi penjualan dan mengembalikan stok produk yang terjual.
+              Tindakan ini akan menghapus {salesForDeletion.length} transaksi penjualan dan mengembalikan stok produk yang terjual.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
