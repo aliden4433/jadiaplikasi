@@ -34,6 +34,7 @@ import { ProductRowActions } from "./product-row-actions"
 import { ProductFormDialog } from "./product-form-dialog"
 import { ExpenseRowActions } from "@/app/dashboard/expenses/expense-row-actions"
 import { ExpenseFormDialog } from "@/app/dashboard/expenses/expense-form-dialog"
+import { ExpensesDataTableToolbar } from "@/app/dashboard/expenses/expenses-data-table-toolbar";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -42,6 +43,7 @@ interface DataTableProps<TData, TValue> {
   filterColumnId?: string
   filterPlaceholder?: string
   categories?: ExpenseCategoryDoc[]
+  entityName?: string
 }
 
 const ProductMobileCard = ({ row, userRole }: { row: any, userRole?: AppUser['role'] }) => {
@@ -130,8 +132,17 @@ const ExpenseMobileCard = ({ row, userRole, categories = [] }: { row: any, userR
                     onOpenChange={setIsEditDialogOpen}
                 />
             )}
-            <Card key={row.id} className="bg-card">
+            <Card key={row.id} data-state={row.getIsSelected() && "selected"} className="bg-card">
                 <CardContent className="p-4 flex gap-4 items-start">
+                    {userRole === 'admin' && (
+                        <div className="pt-1">
+                            <Checkbox
+                                checked={row.getIsSelected()}
+                                onCheckedChange={(value) => row.toggleSelected(!!value)}
+                                aria-label="Select row"
+                            />
+                        </div>
+                    )}
                     <div className="flex-grow space-y-2 overflow-hidden">
                         <div className="flex justify-between items-start">
                              <button
@@ -192,6 +203,7 @@ export function DataTable<TData, TValue>({
   filterColumnId,
   filterPlaceholder,
   categories = [],
+  entityName,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -219,12 +231,21 @@ export function DataTable<TData, TValue>({
   if (isMobile) {
     return (
       <div className="space-y-4">
-        <DataTableToolbar 
-          table={table} 
-          userRole={userRole}
-          filterColumnId={filterColumnId}
-          filterPlaceholder={filterPlaceholder}
-        />
+        {entityName === "pengeluaran" ? (
+          <ExpensesDataTableToolbar
+            table={table}
+            userRole={userRole}
+            filterColumnId={filterColumnId}
+            filterPlaceholder={filterPlaceholder}
+          />
+        ) : (
+          <DataTableToolbar 
+            table={table} 
+            userRole={userRole}
+            filterColumnId={filterColumnId}
+            filterPlaceholder={filterPlaceholder}
+          />
+        )}
         <div className="space-y-4 pb-4">
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => <MobileCard key={row.id} row={row} userRole={userRole} categories={categories} />)
@@ -243,12 +264,21 @@ export function DataTable<TData, TValue>({
   // Desktop table view
   return (
     <div className="space-y-4">
-      <DataTableToolbar 
-        table={table} 
-        userRole={userRole}
-        filterColumnId={filterColumnId}
-        filterPlaceholder={filterPlaceholder}
-      />
+      {entityName === "pengeluaran" ? (
+          <ExpensesDataTableToolbar
+            table={table}
+            userRole={userRole}
+            filterColumnId={filterColumnId}
+            filterPlaceholder={filterPlaceholder}
+          />
+        ) : (
+          <DataTableToolbar 
+            table={table} 
+            userRole={userRole}
+            filterColumnId={filterColumnId}
+            filterPlaceholder={filterPlaceholder}
+          />
+        )}
       <div className="rounded-md border">
         <Table>
           <TableHeader>

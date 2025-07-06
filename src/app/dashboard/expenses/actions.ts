@@ -11,6 +11,7 @@ import {
   deleteDoc,
   query,
   orderBy,
+  writeBatch,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { Expense } from "@/lib/types";
@@ -63,6 +64,25 @@ export async function deleteExpense(id: string) {
     return { success: true, message: "Pengeluaran berhasil dihapus." };
   } catch (error) {
     console.error("Error deleting expense: ", error);
+    return { success: false, message: "Gagal menghapus pengeluaran." };
+  }
+}
+
+
+export async function deleteExpenses(ids: string[]) {
+  try {
+    const batch = writeBatch(db);
+    ids.forEach(id => {
+      const expenseRef = doc(db, "expenses", id);
+      batch.delete(expenseRef);
+    });
+    await batch.commit();
+    revalidatePath("/dashboard/expenses");
+    revalidatePath("/dashboard/reports");
+    revalidatePath("/dashboard/sales-history");
+    return { success: true, message: `${ids.length} pengeluaran berhasil dihapus.` };
+  } catch (error) {
+    console.error("Error deleting expenses: ", error);
     return { success: false, message: "Gagal menghapus pengeluaran." };
   }
 }

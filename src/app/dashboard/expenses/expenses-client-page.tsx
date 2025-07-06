@@ -38,6 +38,7 @@ export function ExpensesClientPage({ initialExpenses, initialCategories }: Expen
         filterColumnId="description"
         filterPlaceholder="Filter berdasarkan deskripsi..."
         categories={initialCategories}
+        entityName="pengeluaran"
       />
        {isMobile && (
          <ExpenseFormDialog categories={initialCategories}>

@@ -3,7 +3,7 @@
 
 import { useState } from "react"
 import type { Table } from "@tanstack/react-table"
-import { Pencil, Trash2 } from "lucide-react"
+import { Trash2 } from "lucide-react"
 
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
@@ -18,37 +18,35 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { deleteProducts } from "./actions"
-import type { Product, AppUser } from "@/lib/types"
-import { ProductBulkEditDialog } from "./product-bulk-edit-dialog"
+import { deleteExpenses } from "./actions"
+import type { Expense, AppUser } from "@/lib/types"
 import { useDangerZone } from "@/context/danger-zone-context"
 
-interface DataTableToolbarProps<TData> {
+interface ExpensesDataTableToolbarProps<TData> {
   table: Table<TData>
   userRole?: AppUser['role']
   filterColumnId?: string
   filterPlaceholder?: string
 }
 
-export function DataTableToolbar<TData>({
+export function ExpensesDataTableToolbar<TData>({
   table,
   userRole,
   filterColumnId,
   filterPlaceholder,
-}: DataTableToolbarProps<TData>) {
+}: ExpensesDataTableToolbarProps<TData>) {
   const { toast } = useToast()
-  const { isDangerZoneActive } = useDangerZone()
+  const { isDangerZoneActive } = useDangerZone();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [isBulkEditDialogOpen, setIsBulkEditDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const selectedRows = table.getFilteredSelectedRowModel().rows
 
   async function handleDelete() {
     setIsDeleting(true)
     const selectedIds = selectedRows.map(
-      (row) => (row.original as Product).id!
+      (row) => (row.original as Expense).id!
     )
-    const result = await deleteProducts(selectedIds)
+    const result = await deleteExpenses(selectedIds)
     if (result.success) {
       toast({
         title: "Sukses",
@@ -84,18 +82,6 @@ export function DataTableToolbar<TData>({
       </div>
       {userRole === 'admin' && selectedRows.length > 0 ? (
         <div className="flex items-center space-x-2">
-          <ProductBulkEditDialog
-            products={selectedRows.map(row => row.original as Product)}
-            open={isBulkEditDialogOpen}
-            onOpenChange={setIsBulkEditDialogOpen}
-            onSuccess={() => table.resetRowSelection()}
-          >
-             <Button variant="outline">
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit ({selectedRows.length})
-            </Button>
-          </ProductBulkEditDialog>
-
           <Button
             variant="destructive"
             onClick={() => setIsDeleteDialogOpen(true)}
@@ -110,7 +96,7 @@ export function DataTableToolbar<TData>({
               <AlertDialogHeader>
                 <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Tindakan ini tidak dapat dibatalkan. Ini akan menghapus {selectedRows.length} produk secara permanen.
+                  Tindakan ini tidak dapat dibatalkan. Ini akan menghapus {selectedRows.length} pengeluaran secara permanen.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
