@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
@@ -33,7 +32,7 @@ import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { Calendar } from "@/components/ui/calendar"
 import { ProductVariantDialog } from "./sales/product-variant-dialog"
-import { ExpenseFormDialog } from "../expenses/expense-form-dialog"
+import { ExpenseFormDialog } from "@/app/dashboard/expenses/expense-form-dialog"
 
 interface SalesClientPageProps {
   products: Product[]
