@@ -52,12 +52,13 @@ const extractProductsPrompt = ai.definePrompt({
   2.  **Extract ALL Products**: Do not miss any product. Go through the document line by line, table by table.
   3.  **Accurate Quantity**: Pay very close attention to extracting the correct quantity for each product. This is often the most important piece of information.
   4.  **Numerical Conversion**: Prices and quantities may have currency symbols (e.g., 'Rp', '$') or thousands separators (dots or commas). You must convert these into standard numerical values (e.g., "Rp15.000" becomes 15000).
-  5.  **Ignore Non-Product Data**: It is extremely important that you **ignore** any text that is not a product listing. This includes, but is not limited to:
+  5.  **Product Filtering**: Do not include any products whose names contain the words "keripik" or "kripik".
+  6.  **Ignore Non-Product Data**: It is extremely important that you **ignore** any text that is not a product listing. This includes, but is not limited to:
       - Headers, footers, page numbers.
       - Customer names, addresses, phone numbers.
       - Order metadata like "Nomor Pesanan", "Invoice Number", "Transaction ID", "Date".
       - Summary totals, tax information, shipping costs.
-  6.  **Schema Conformance**: Return the extracted data as a JSON object that strictly conforms to the provided output schema. If a field is missing for a product, use a sensible default (e.g., 0 for price/stock).
+  7.  **Schema Conformance**: Return the extracted data as a JSON object that strictly conforms to the provided output schema. If a field is missing for a product, use a sensible default (e.g., 0 for price/stock).
 
   PDF for analysis: {{media url=pdfDataUri}}`,
 });
