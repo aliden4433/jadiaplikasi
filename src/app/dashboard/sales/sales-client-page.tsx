@@ -29,7 +29,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { SalesImportButton } from "./sales-import-button"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { Calendar } from "@/components/ui/calendar"
@@ -51,7 +50,7 @@ const getInitialDiscount = () => {
 export function SalesClientPage({ products, sales }: SalesClientPageProps) {
   const [cart, setCart] = useState<CartItem[]>([])
   const [discount, setDiscount] = useState(0) // Percentage
-  const [transactionDate, setTransactionDate] = useState<Date>(new Date())
+  const [transactionDate, setTransactionDate] = useState<Date>()
   const [isProcessing, setIsProcessing] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [sortOrder, setSortOrder] = useState("name-asc")
@@ -59,9 +58,10 @@ export function SalesClientPage({ products, sales }: SalesClientPageProps) {
   const isMobile = useIsMobile()
   const [variantSelection, setVariantSelection] = useState<Product[] | null>(null)
 
-  // Load initial discount on client side
+  // Load initial discount and date on client side
   useEffect(() => {
     setDiscount(getInitialDiscount());
+    setTransactionDate(new Date());
   }, []);
 
   const salesCount = useMemo(() => {
@@ -136,16 +136,6 @@ export function SalesClientPage({ products, sales }: SalesClientPageProps) {
     }
   }
 
-  const handleImportSuccess = (itemsFromPdf: CartItem[]) => {
-    itemsFromPdf.forEach(item => {
-        addToCart(item.product, item.quantity, false);
-    });
-    toast({
-        title: "Impor Selesai",
-        description: `${itemsFromPdf.length} item produk dari PDF telah ditambahkan ke keranjang.`
-    })
-  }
-
   const updateQuantity = (productId: string, quantity: number) => {
     if (quantity < 1) {
       removeFromCart(productId)
@@ -185,6 +175,15 @@ export function SalesClientPage({ products, sales }: SalesClientPageProps) {
         description: "Tidak ada item untuk diproses.",
       })
       return
+    }
+
+    if (!transactionDate) {
+      toast({
+        variant: "destructive",
+        title: "Tanggal Tidak Valid",
+        description: "Harap pilih tanggal transaksi.",
+      });
+      return;
     }
 
     setIsProcessing(true)
@@ -378,7 +377,6 @@ export function SalesClientPage({ products, sales }: SalesClientPageProps) {
       <>
         <div className="space-y-4">
            <div className="flex items-center gap-2 w-full md:w-auto">
-                <SalesImportButton onImportSuccess={handleImportSuccess} products={products} />
                 <Input
                     placeholder="Cari produk..."
                     value={searchTerm}
@@ -486,7 +484,6 @@ export function SalesClientPage({ products, sales }: SalesClientPageProps) {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <CardTitle>Produk</CardTitle>
             <div className="flex items-center gap-2 w-full md:w-auto">
-                <SalesImportButton onImportSuccess={handleImportSuccess} products={products} />
                 <Input
                     placeholder="Cari produk..."
                     value={searchTerm}

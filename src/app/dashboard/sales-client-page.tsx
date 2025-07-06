@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
@@ -51,7 +52,7 @@ const getInitialDiscount = () => {
 export function SalesClientPage({ products, sales, categories }: SalesClientPageProps) {
   const [cart, setCart] = useState<CartItem[]>([])
   const [discount, setDiscount] = useState(0) // Percentage
-  const [transactionDate, setTransactionDate] = useState<Date>(new Date())
+  const [transactionDate, setTransactionDate] = useState<Date>()
   const [isProcessing, setIsProcessing] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [sortOrder, setSortOrder] = useState("name-asc")
@@ -59,9 +60,10 @@ export function SalesClientPage({ products, sales, categories }: SalesClientPage
   const isMobile = useIsMobile()
   const [variantSelection, setVariantSelection] = useState<Product[] | null>(null)
 
-  // Load initial discount on client side
+  // Load initial discount and date on client side
   useEffect(() => {
     setDiscount(getInitialDiscount());
+    setTransactionDate(new Date());
   }, []);
 
   const salesCount = useMemo(() => {
@@ -175,6 +177,15 @@ export function SalesClientPage({ products, sales, categories }: SalesClientPage
         description: "Tidak ada item untuk diproses.",
       })
       return
+    }
+
+    if (!transactionDate) {
+      toast({
+        variant: "destructive",
+        title: "Tanggal Tidak Valid",
+        description: "Harap pilih tanggal transaksi.",
+      });
+      return;
     }
 
     setIsProcessing(true)
