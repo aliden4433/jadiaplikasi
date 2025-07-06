@@ -50,10 +50,10 @@ export function SalesHistoryList({ sales: initialSales, expenses: initialExpense
   const { user } = useAuth();
   const { isDangerZoneActive } = useDangerZone();
   const userRole = user?.role;
-  const [date, setDate] = useState<DateRange | undefined>(undefined)
+  const [date, setDate] = useState<DateRange | undefined>(undefined);
 
   useEffect(() => {
-    // Default to last 30 days
+    // Default to last 30 days, set on client to avoid hydration errors.
     setDate({
       from: subDays(new Date(), 29),
       to: new Date(),
@@ -386,7 +386,7 @@ export function SalesHistoryList({ sales: initialSales, expenses: initialExpense
           <AlertDialogHeader>
             <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
             <AlertDialogDescription>
-              Tindakan ini tidak dapat dibatalkan. Ini akan menghapus {salesForDeletion.length} transaksi penjualan dan mengembalikan stok produk yang terjual.
+              Tindakan ini tidak akan menghapus {salesForDeletion.length} transaksi penjualan dan mengembalikan stok produk yang terjual.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
