@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import type { Sale, Expense } from "@/lib/types";
-import { format, addDays } from "date-fns";
+import { format, addDays, subDays } from "date-fns";
 import { id } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
@@ -53,7 +53,7 @@ export function SalesHistoryList({ sales: initialSales, expenses: initialExpense
   useEffect(() => {
     // Default to last 30 days
     setDate({
-      from: addDays(new Date(), -29),
+      from: subDays(new Date(), 29),
       to: new Date(),
     })
   }, [])
@@ -200,18 +200,25 @@ export function SalesHistoryList({ sales: initialSales, expenses: initialExpense
                         {date?.from ? (
                           date.to ? (
                             <>
-                              {format(date.from, "LLL dd, y")} -{" "}
-                              {format(date.to, "LLL dd, y")}
+                              {format(date.from, "d MMM yyyy", { locale: id })} -{" "}
+                              {format(date.to, "d MMM yyyy", { locale: id })}
                             </>
                           ) : (
-                            format(date.from, "LLL dd, y")
+                            format(date.from, "d MMM yyyy", { locale: id })
                           )
                         ) : (
                           <span>Pilih tanggal</span>
                         )}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="end">
+                    <PopoverContent className="w-auto p-0 flex flex-col sm:flex-row" align="end">
+                       <div className="flex flex-col space-y-1 p-2 border-b sm:border-r sm:border-b-0">
+                            <Button variant="ghost" className="justify-start w-full text-left font-normal" onClick={() => setDate({from: new Date(), to: new Date()})}>Hari ini</Button>
+                            <Button variant="ghost" className="justify-start w-full text-left font-normal" onClick={() => setDate({from: subDays(new Date(), 1), to: subDays(new Date(), 1)})}>Kemarin</Button>
+                            <Button variant="ghost" className="justify-start w-full text-left font-normal" onClick={() => setDate({from: subDays(new Date(), 6), to: new Date()})}>7 hari terakhir</Button>
+                            <Button variant="ghost" className="justify-start w-full text-left font-normal" onClick={() => setDate({from: subDays(new Date(), 13), to: new Date()})}>14 hari terakhir</Button>
+                            <Button variant="ghost" className="justify-start w-full text-left font-normal" onClick={() => setDate({from: subDays(new Date(), 29), to: new Date()})}>30 hari terakhir</Button>
+                        </div>
                       <Calendar
                         initialFocus
                         mode="range"
