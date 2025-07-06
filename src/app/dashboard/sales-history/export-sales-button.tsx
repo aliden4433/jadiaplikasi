@@ -117,7 +117,7 @@ export function ExportSalesButton({ sales, expenses, disabled }: ExportSalesButt
     ws["!cols"] = colWidths
 
     // Set number formatting for currency columns
-    const currencyFormat = "#,##0";
+    const currencyFormat = "#,##0.00";
     
     // Format sales data
     const salesDataRows = salesData.length + 1; // +1 for header

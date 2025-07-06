@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
@@ -135,8 +136,8 @@ export function ReportsClientPage({ initialSales, products, initialExpenses }: R
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(revenue)}
+            <div className="text-xl font-bold">
+              {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(revenue)}
             </div>
             <p className="text-xs text-muted-foreground">dari {count} penjualan di periode ini</p>
           </CardContent>
@@ -147,8 +148,8 @@ export function ReportsClientPage({ initialSales, products, initialExpenses }: R
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(totalExpenses)}
+            <div className="text-xl font-bold">
+              {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(totalExpenses)}
             </div>
             <p className="text-xs text-muted-foreground">Total pengeluaran di periode ini</p>
           </CardContent>
@@ -160,10 +161,10 @@ export function ReportsClientPage({ initialSales, products, initialExpenses }: R
           </CardHeader>
           <CardContent>
             <div className={cn(
-              "text-2xl font-bold",
+              "text-xl font-bold",
               profit < 0 && "text-destructive"
             )}>
-              {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(profit)}
+              {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(profit)}
             </div>
             <p className="text-xs text-muted-foreground">Pendapatan dikurangi pengeluaran</p>
           </CardContent>
@@ -175,7 +176,7 @@ export function ReportsClientPage({ initialSales, products, initialExpenses }: R
               <ShoppingBag className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{allTimeSalesCount}</div>
+              <div className="text-xl font-bold">{allTimeSalesCount}</div>
               <p className="text-xs text-muted-foreground">Total transaksi (semua waktu)</p>
             </CardContent>
           </Card>
@@ -186,7 +187,7 @@ export function ReportsClientPage({ initialSales, products, initialExpenses }: R
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{products.length}</div>
+            <div className="text-xl font-bold">{products.length}</div>
             <p className="text-xs text-muted-foreground">Produk dalam katalog</p>
           </CardContent>
         </Card>

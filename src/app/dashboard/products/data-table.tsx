@@ -91,12 +91,12 @@ const MobileCard = ({ row, userRole }: { row: any, userRole?: AppUser['role'] })
               <div className="text-sm text-muted-foreground space-y-1">
                  <div className="flex justify-between">
                      <span>Harga Jual</span>
-                     <span className="font-medium text-foreground">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price)}</span>
+                     <span className="font-medium text-foreground">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(product.price)}</span>
                  </div>
                  {userRole === 'admin' && (
                     <div className="flex justify-between">
                        <span>Harga Modal</span>
-                       <span className="font-medium text-foreground">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.costPrice)}</span>
+                       <span className="font-medium text-foreground">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(product.costPrice)}</span>
                     </div>
                   )}
                   <div className="flex justify-between">

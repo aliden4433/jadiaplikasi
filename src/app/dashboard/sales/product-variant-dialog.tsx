@@ -46,7 +46,7 @@ export function ProductVariantDialog({ productGroup, open, onOpenChange, onAddTo
               <div key={variant.id} className="flex items-center justify-between p-2 rounded-md hover:bg-accent">
                 <div>
                   <p className="font-medium">{variantName}</p>
-                  <p className="text-sm text-muted-foreground">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(variant.price)}</p>
+                  <p className="text-sm text-muted-foreground">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(variant.price)}</p>
                 </div>
                 <Button onClick={() => handleAddToCart(variant)} size="sm">Tambah</Button>
               </div>
