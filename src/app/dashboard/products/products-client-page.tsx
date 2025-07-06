@@ -29,7 +29,7 @@ export function ProductsClientPage({ products }: ProductsClientPageProps) {
         return columns.filter(col => 
             col.id !== 'select' && 
             col.id !== 'actions' && 
-            col.accessorKey !== 'costPrice'
+            col.id !== 'costPrice'
         );
     }, [userRole]) as ColumnDef<Product>[];
 
