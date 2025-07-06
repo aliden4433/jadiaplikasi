@@ -34,6 +34,8 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   userRole?: AppUser['role']
+  filterColumnId?: string
+  filterPlaceholder?: string
 }
 
 const MobileCard = ({ row, userRole }: { row: any, userRole?: AppUser['role'] }) => {
@@ -113,6 +115,8 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   userRole,
+  filterColumnId,
+  filterPlaceholder,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -141,7 +145,12 @@ export function DataTable<TData, TValue>({
   if (isMobile) {
     return (
       <div className="space-y-4">
-        <DataTableToolbar table={table} userRole={userRole} />
+        <DataTableToolbar 
+          table={table} 
+          userRole={userRole}
+          filterColumnId={filterColumnId}
+          filterPlaceholder={filterPlaceholder}
+        />
         <div className="space-y-4 pb-4">
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => <MobileCard key={row.id} row={row} userRole={userRole} />)
@@ -160,7 +169,12 @@ export function DataTable<TData, TValue>({
   // Desktop table view
   return (
     <div className="space-y-4">
-      <DataTableToolbar table={table} userRole={userRole} />
+      <DataTableToolbar 
+        table={table} 
+        userRole={userRole}
+        filterColumnId={filterColumnId}
+        filterPlaceholder={filterPlaceholder}
+      />
       <div className="rounded-md border">
         <Table>
           <TableHeader>

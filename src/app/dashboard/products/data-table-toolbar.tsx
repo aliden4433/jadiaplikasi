@@ -25,11 +25,15 @@ import { ProductBulkEditDialog } from "./product-bulk-edit-dialog"
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
   userRole?: AppUser['role']
+  filterColumnId?: string
+  filterPlaceholder?: string
 }
 
 export function DataTableToolbar<TData>({
   table,
   userRole,
+  filterColumnId,
+  filterPlaceholder,
 }: DataTableToolbarProps<TData>) {
   const { toast } = useToast()
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -60,17 +64,21 @@ export function DataTableToolbar<TData>({
     setIsDeleteDialogOpen(false)
   }
 
+  const filterColumn = filterColumnId ? table.getColumn(filterColumnId) : undefined;
+
   return (
     <div className="flex items-center justify-between">
       <div className="flex flex-1 items-center space-x-2">
-        <Input
-          placeholder="Filter produk..."
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("name")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
+        {filterColumn && (
+          <Input
+            placeholder={filterPlaceholder || "Filter..."}
+            value={(filterColumn.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+              filterColumn.setFilterValue(event.target.value)
+            }
+            className="max-w-sm"
+          />
+        )}
       </div>
       {userRole === 'admin' && selectedRows.length > 0 ? (
         <div className="flex items-center space-x-2">

@@ -48,7 +48,13 @@ export function ProductsClientPage({ products }: ProductsClientPageProps) {
                     </ProductFormDialog>
                 )}
             </div>
-            <DataTable columns={visibleColumns} data={products} userRole={userRole} />
+            <DataTable 
+              columns={visibleColumns} 
+              data={products} 
+              userRole={userRole}
+              filterColumnId="name"
+              filterPlaceholder="Filter produk..."
+            />
             {userRole === 'admin' && isMobile === true && (
                 <ProductFormDialog>
                     <Button

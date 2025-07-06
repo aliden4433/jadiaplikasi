@@ -25,7 +25,13 @@ export function ExpensesClientPage({ initialExpenses }: ExpensesClientPageProps)
           </Button>
         </ExpenseFormDialog>
       </div>
-      <DataTable columns={columns} data={initialExpenses} userRole="admin" />
+      <DataTable
+        columns={columns}
+        data={initialExpenses}
+        userRole="admin"
+        filterColumnId="description"
+        filterPlaceholder="Filter berdasarkan deskripsi..."
+      />
     </div>
   );
 }
