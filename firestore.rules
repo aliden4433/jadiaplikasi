@@ -1,53 +1,9 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-  
-    // Helper function to check if the user has the 'admin' role
-    function isAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-    
-    // Users can only read and write their own user document
-    // No one can delete user documents through the app
-    match /users/{userId} {
-      allow read, update, create: if request.auth != null && request.auth.uid == userId;
-      allow delete: if false;
-    }
-    
-    // Only admins can create, update, or delete products
-    // Any authenticated user can view products
-    match /products/{productId} {
-      allow read: if request.auth != null;
-      allow create, update, delete: if request.auth != null && isAdmin();
-    }
-    
-    // Any authenticated user can create a sale (cashiers need this)
-    // Only admins can delete sales history
-    match /sales/{saleId} {
-      allow read, create: if request.auth != null;
-      allow update: if false;
-      allow delete: if request.auth != null && isAdmin();
-    }
-    
-    // The counter is updated during a sale transaction,
-    // so any authenticated user needs access.
-    match /counters/{counterId} {
+    match /{document=**} {
+      // Hanya izinkan baca dan tulis jika pengguna sudah login
       allow read, write: if request.auth != null;
-    }
-    
-    // Any authenticated user can create/read expenses
-    // Only admins can update or delete expenses
-    match /expenses/{expenseId} {
-      allow read, create: if request.auth != null;
-      allow update, delete: if request.auth != null && isAdmin();
-    }
-    
-    // Expense categories can be read by anyone authenticated
-    // but only managed (CUD) by admins
-    match /expense_categories/{categoryId} {
-       allow read: if request.auth != null;
-       allow create, update, delete: if request.auth != null && isAdmin();
     }
   }
 }
