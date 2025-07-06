@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -109,10 +108,7 @@ export default function LoginPage() {
             </form>
           </Form>
           <p className="mt-4 text-center text-sm text-muted-foreground">
-            Belum punya akun?{' '}
-            <Link href="/signup" className="font-semibold text-primary hover:underline">
-              Daftar di sini
-            </Link>
+            Copyright by ALI DEDEN NURYADIN
           </p>
         </CardContent>
       </Card>
