@@ -8,8 +8,8 @@ import { AuthProvider } from '@/context/auth-context';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'BizFlow POS',
-  description: 'Aplikasi kasir POS untuk mengelola transaksi penjualan dan keuangan.',
+  title: 'Kasir Kilat',
+  description: 'Aplikasi kasir POS (Point of Sale) serbaguna dari Kasir Kilat.',
   icons: [{ rel: "icon", url: "/logo.svg" }],
 };
 

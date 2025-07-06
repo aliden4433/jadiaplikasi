@@ -69,7 +69,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <Icons.logo className="mx-auto size-12" />
-          <CardTitle className="mt-4">Login ke BizFlow</CardTitle>
+          <CardTitle className="mt-4">Login ke Kasir Kilat</CardTitle>
           <CardDescription>Masukkan email dan kata sandi Anda untuk melanjutkan.</CardDescription>
         </CardHeader>
         <CardContent>

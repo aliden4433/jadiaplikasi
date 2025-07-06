@@ -79,8 +79,8 @@ export default function SignupPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <Icons.logo className="mx-auto size-12" />
-          <CardTitle className="mt-4">Buat Akun Baru</CardTitle>
-          <CardDescription>Daftarkan diri Anda untuk mulai menggunakan BizFlow.</CardDescription>
+          <CardTitle className="mt-4">Buat Akun Kasir Kilat</CardTitle>
+          <CardDescription>Daftarkan diri Anda untuk mulai menggunakan Kasir Kilat.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
