@@ -59,6 +59,16 @@ export async function processSalesPdfForReview(pdfDataUri: string): Promise<Sale
       matchedProduct = sortedDbProducts.find(p => p.name.toLowerCase().trim() === 'glaswool 1m') || null;
     } else if (extractedNameLower.includes('60 x 30')) {
       matchedProduct = sortedDbProducts.find(p => p.name.toLowerCase().trim() === 'putih 60x30') || null;
+    } else if (extractedNameLower.includes('1kg') || extractedNameLower.includes('1 kg')) {
+        matchedProduct = sortedDbProducts.find(p => 
+            p.name.toLowerCase().includes('rambut nenek') && 
+            (p.name.toLowerCase().includes('1kg') || p.name.toLowerCase().includes('1 kg'))
+        ) || null;
+    } else if (extractedNameLower.includes('500gr') || extractedNameLower.includes('500 gr')) {
+        matchedProduct = sortedDbProducts.find(p => 
+            p.name.toLowerCase().includes('rambut nenek') && 
+            (p.name.toLowerCase().includes('500gr') || p.name.toLowerCase().includes('500 gr'))
+        ) || null;
     }
 
     // If no custom rule matched, fall back to the generic fuzzy matching
