@@ -22,15 +22,23 @@ const chartConfig = {
 export function BestsellersChart({ data }: BestsellersChartProps) {
   return (
     <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-      <ResponsiveContainer width="100%" height={350}>
-        <BarChart data={data}>
+      <ResponsiveContainer width="100%" height={400}>
+        <BarChart
+          data={data}
+          margin={{
+            bottom: 60,
+          }}
+        >
           <CartesianGrid vertical={false} />
           <XAxis
             dataKey="name"
             tickLine={false}
             tickMargin={10}
             axisLine={false}
-            />
+            angle={-45}
+            textAnchor="end"
+            interval={0}
+          />
           <YAxis />
           <ChartTooltip
             cursor={false}

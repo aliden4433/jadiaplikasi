@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
@@ -160,7 +159,10 @@ export function ReportsClientPage({ initialSales, products, initialExpenses }: R
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className={cn(
+              "text-2xl font-bold",
+              profit < 0 && "text-destructive"
+            )}>
               {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(profit)}
             </div>
             <p className="text-xs text-muted-foreground">Pendapatan dikurangi pengeluaran</p>
