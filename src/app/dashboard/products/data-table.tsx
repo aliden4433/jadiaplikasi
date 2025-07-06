@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -224,7 +223,6 @@ export function DataTable<TData, TValue>({
       columnFilters,
       rowSelection,
     },
-    enablePagination: false,
   })
 
   // Mobile card view. `isMobile` is false on first render, so this avoids hydration errors.
