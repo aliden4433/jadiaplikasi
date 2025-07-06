@@ -26,6 +26,25 @@ export async function addProduct(product: Omit<Product, "id">) {
   }
 }
 
+export async function addProductsBatch(products: Omit<Product, "id">[]) {
+  try {
+    const batch = writeBatch(db);
+    const productsCol = collection(db, "products");
+    
+    products.forEach(product => {
+      const docRef = doc(productsCol);
+      batch.set(docRef, product);
+    });
+    
+    await batch.commit();
+    revalidatePath("/dashboard/products");
+    return { success: true, message: `${products.length} produk berhasil diimpor.` };
+  } catch (error) {
+    console.error("Error importing products: ", error);
+    return { success: false, message: "Gagal mengimpor produk." };
+  }
+}
+
 export async function duplicateProduct(product: Omit<Product, "id">) {
   try {
     const productsCol = collection(db, "products")
