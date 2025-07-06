@@ -1,9 +1,0 @@
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      // Hanya izinkan baca dan tulis jika pengguna sudah login
-      allow read, write: if request.auth != null;
-    }
-  }
-}

@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button"
 
 const allNavItems = [
   { href: "/dashboard", icon: ShoppingCart, label: "Penjualan" },
-  { href: "/dashboard/products", icon: Package, label: "Produk" },
+  { href: "/dashboard/products", icon: Package, label: "Produk", roles: ["admin"] },
   { href: "/dashboard/sales-history", icon: History, label: "Riwayat Penjualan" },
   { href: "/dashboard/expenses", icon: Wallet, label: "Pengeluaran", roles: ["admin", "cashier"] },
   { href: "/dashboard/reports", icon: BarChart2, label: "Laporan", roles: ["admin"] },
