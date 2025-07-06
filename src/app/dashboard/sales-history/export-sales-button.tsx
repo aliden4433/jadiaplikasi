@@ -67,13 +67,14 @@ export function ExportSalesButton({ sales, expenses, disabled }: ExportSalesButt
     })
     
     // 3. Define Expenses Headers
-    const expensesHeaders = ["Tanggal Pengeluaran", "Kategori", "Deskripsi", "Jumlah"];
+    const expensesHeaders = ["Tanggal Pengeluaran", "Kategori", "Deskripsi", "Dicatat oleh", "Jumlah"];
 
     // 4. Map Expenses Data to Rows
     const expensesData = expenses.map((expense) => [
         format(new Date(expense.date), "M/d/yyyy"),
         expense.category,
         expense.description,
+        expense.recordedBy?.email || '',
         expense.amount,
     ]);
 
@@ -119,8 +120,8 @@ export function ExportSalesButton({ sales, expenses, disabled }: ExportSalesButt
       { wch: 20 }, // No Transaksi
       { wch: 15 }, // Tanggal or Kategori
       { wch: 25 }, // Deskripsi
-      { wch: 15 }, // Jumlah
-      { wch: 15 }, // Nama Pelanggan
+      { wch: 20 }, // Dicatat oleh
+      { wch: 15 }, // Jumlah or Nama Pelanggan
       { wch: 15 }, // Sub Total
       { wch: 15 }, // Total Pokok
       { wch: 15 }, // Laba Kotor
@@ -151,7 +152,7 @@ export function ExportSalesButton({ sales, expenses, disabled }: ExportSalesButt
         const expenseStartRow = salesDataRows + 3; // After sales, spacer, and header
         const expenseEndRow = expenseStartRow + expensesData.length;
         for (let R = expenseStartRow; R < expenseEndRow; ++R) {
-            const cell_address = { c: 3, r: R }; // Column D
+            const cell_address = { c: 4, r: R }; // Column E for amount
             const cell_ref = XLSX.utils.encode_cell(cell_address);
             if(ws[cell_ref] && typeof ws[cell_ref].v === 'number') {
                ws[cell_ref].z = currencyFormat;

@@ -39,7 +39,7 @@ export async function addExpense(expense: Omit<Expense, "id">) {
   }
 }
 
-export async function updateExpense(id: string, expense: Omit<Expense, "id">) {
+export async function updateExpense(id: string, expense: Omit<Expense, "id" | "recordedBy">) {
   try {
     const expenseRef = doc(db, "expenses", id);
     await updateDoc(expenseRef, expense);

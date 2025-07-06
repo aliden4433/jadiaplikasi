@@ -42,6 +42,7 @@ import { addExpense, updateExpense } from "./actions";
 import type { Expense, ExpenseCategoryDoc } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks/use-auth";
 
 const formSchema = z.object({
   description: z.string().min(1, "Deskripsi tidak boleh kosong."),
@@ -66,6 +67,7 @@ export function ExpenseFormDialog({ expense, children, categories, open: openPro
   const open = openProp !== undefined ? openProp : internalOpen;
   const setOpen = onOpenChangeProp !== undefined ? onOpenChangeProp : setInternalOpen;
   
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const isEditMode = !!expense;
@@ -135,16 +137,35 @@ export function ExpenseFormDialog({ expense, children, categories, open: openPro
     setIsLoading(true);
     try {
       let result;
-      const expenseData = {
-        description: values.description,
-        amount: values.amount,
-        category: values.category,
-        date: values.date.toISOString(),
-      };
       
       if (isEditMode && expense?.id) {
+        const expenseData = {
+          description: values.description,
+          amount: values.amount,
+          category: values.category,
+          date: values.date.toISOString(),
+        };
         result = await updateExpense(expense.id, expenseData);
       } else {
+        if (!user) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Sesi Anda telah berakhir. Silakan login kembali.",
+          });
+          setIsLoading(false);
+          return;
+        }
+        const expenseData = {
+          description: values.description,
+          amount: values.amount,
+          category: values.category,
+          date: values.date.toISOString(),
+          recordedBy: {
+            email: user.email,
+            uid: user.uid,
+          },
+        };
         result = await addExpense(expenseData);
       }
 

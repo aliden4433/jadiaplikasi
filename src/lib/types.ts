@@ -54,4 +54,8 @@ export type Expense = {
   amount: number;
   category: ExpenseCategory;
   date: string;
+  recordedBy?: {
+    email: string | null;
+    uid: string;
+  };
 };

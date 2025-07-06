@@ -160,6 +160,12 @@ const ExpenseMobileCard = ({ row, userRole, categories = [] }: { row: any, userR
                                 <span>Jumlah</span>
                                 <span className="font-medium text-foreground">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(expense.amount)}</span>
                             </div>
+                             {expense.recordedBy && (
+                                <div className="flex justify-between">
+                                    <span>Dicatat oleh</span>
+                                    <span className="font-medium text-foreground truncate">{expense.recordedBy.email}</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </CardContent>

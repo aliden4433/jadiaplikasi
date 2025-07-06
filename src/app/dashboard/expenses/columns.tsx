@@ -82,6 +82,15 @@ export const getColumns = (categories: ExpenseCategoryDoc[]): ColumnDef<Expense>
     },
   },
   {
+    accessorKey: "recordedBy",
+    header: "Dicatat oleh",
+    cell: ({ row }) => {
+      const recordedBy = row.original.recordedBy;
+      return <div className="text-left truncate">{recordedBy?.email || "N/A"}</div>;
+    },
+    enableSorting: false,
+  },
+  {
     id: "actions",
     header: () => <div className="text-right">Aksi</div>,
     cell: ({ row }) => {
