@@ -28,6 +28,7 @@ import type { Expense, ExpenseCategoryDoc } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { deleteExpense } from "./actions";
 import { ExpenseFormDialog } from "./expense-form-dialog";
+import { useDangerZone } from "@/context/danger-zone-context";
 
 interface ExpenseRowActionsProps {
   expense: Expense;
@@ -39,6 +40,7 @@ export function ExpenseRowActions({ expense, categories }: ExpenseRowActionsProp
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
+  const { isDangerZoneActive } = useDangerZone();
 
   async function handleDelete() {
     if (!expense.id) return;
@@ -101,12 +103,13 @@ export function ExpenseRowActions({ expense, categories }: ExpenseRowActionsProp
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Aksi</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
+          <DropdownMenuItem onSelect={() => setIsEditDialogOpen(true)}>
             <Pencil className="mr-2 h-4 w-4" />
             <span>Edit</span>
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => setIsDeleteDialogOpen(true)}
+            onSelect={() => setIsDeleteDialogOpen(true)}
+            disabled={!isDangerZoneActive}
             className="text-red-600 focus:bg-red-50 focus:text-red-600"
           >
             <Trash2 className="mr-2 h-4 w-4" />

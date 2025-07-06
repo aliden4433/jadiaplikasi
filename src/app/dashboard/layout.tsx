@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from "next/link"
@@ -19,6 +20,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Icons } from "@/components/icons"
 import { useAuth } from "@/hooks/use-auth"
+import { DangerZoneProvider } from "@/context/danger-zone-context"
 
 const allNavItems = [
   { href: "/dashboard", icon: ShoppingCart, label: "Penjualan" },
@@ -116,7 +118,9 @@ export default function DashboardLayout({
 }) {
   return (
     <SidebarProvider>
-      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+      <DangerZoneProvider>
+        <DashboardLayoutContent>{children}</DashboardLayoutContent>
+      </DangerZoneProvider>
     </SidebarProvider>
   )
 }
