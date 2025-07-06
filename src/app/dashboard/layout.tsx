@@ -24,7 +24,7 @@ const allNavItems = [
   { href: "/dashboard", icon: ShoppingCart, label: "Penjualan" },
   { href: "/dashboard/products", icon: Package, label: "Produk" },
   { href: "/dashboard/sales-history", icon: History, label: "Riwayat Penjualan" },
-  { href: "/dashboard/expenses", icon: Wallet, label: "Pengeluaran", roles: ["admin"] },
+  { href: "/dashboard/expenses", icon: Wallet, label: "Pengeluaran", roles: ["admin", "cashier"] },
   { href: "/dashboard/reports", icon: BarChart2, label: "Laporan", roles: ["admin"] },
   { href: "/dashboard/inventory", icon: BrainCircuit, label: "Inventaris AI", roles: ["admin"] },
   { href: "/dashboard/settings", icon: Settings, label: "Pengaturan", roles: ["admin"] },

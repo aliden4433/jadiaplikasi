@@ -2,11 +2,11 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
-import { Trash2, ShoppingCart, Loader2, Calendar as CalendarIcon, ChevronDown } from "lucide-react"
+import { Trash2, ShoppingCart, Loader2, Calendar as CalendarIcon, ChevronDown, PlusCircle } from "lucide-react"
 import { format } from "date-fns"
 
 import { addSale } from "./sales/actions"
-import type { CartItem, Product, Sale } from "@/lib/types"
+import type { CartItem, Product, Sale, ExpenseCategoryDoc } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -34,10 +34,12 @@ import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { Calendar } from "@/components/ui/calendar"
 import { ProductVariantDialog } from "./sales/product-variant-dialog"
+import { ExpenseFormDialog } from "./expenses/expense-form-dialog"
 
 interface SalesClientPageProps {
   products: Product[]
   sales: Sale[]
+  categories: ExpenseCategoryDoc[]
 }
 
 const getInitialDiscount = () => {
@@ -48,7 +50,7 @@ const getInitialDiscount = () => {
     return savedDiscount ? parseFloat(savedDiscount) : 0;
 };
 
-export function SalesClientPage({ products, sales }: SalesClientPageProps) {
+export function SalesClientPage({ products, sales, categories }: SalesClientPageProps) {
   const [cart, setCart] = useState<CartItem[]>([])
   const [discount, setDiscount] = useState(0) // Percentage
   const [transactionDate, setTransactionDate] = useState<Date>(new Date())
@@ -378,14 +380,20 @@ export function SalesClientPage({ products, sales }: SalesClientPageProps) {
       <>
         <div className="space-y-4">
            <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
+                <ExpenseFormDialog categories={categories}>
+                    <Button variant="outline" className="w-full">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Tambah Pengeluaran
+                    </Button>
+                </ExpenseFormDialog>
                 <SalesImportButton onImportSuccess={handleImportSuccess} products={products} />
-                <Input
-                    placeholder="Cari produk..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full"
-                />
             </div>
+            <Input
+                placeholder="Cari produk..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full"
+            />
             <Select value={sortOrder} onValueChange={setSortOrder}>
                 <SelectTrigger className="w-full">
                 <SelectValue placeholder="Urutkan" />
@@ -486,6 +494,12 @@ export function SalesClientPage({ products, sales }: SalesClientPageProps) {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <CardTitle>Produk</CardTitle>
             <div className="flex items-center gap-2 w-full md:w-auto">
+                <ExpenseFormDialog categories={categories}>
+                    <Button variant="outline">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Pengeluaran
+                    </Button>
+                </ExpenseFormDialog>
                 <SalesImportButton onImportSuccess={handleImportSuccess} products={products} />
                 <Input
                     placeholder="Cari produk..."
