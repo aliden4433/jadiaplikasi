@@ -59,3 +59,8 @@ export type Expense = {
     uid: string;
   };
 };
+
+export type GlobalSettings = {
+  id?: string;
+  defaultDiscount?: number;
+};

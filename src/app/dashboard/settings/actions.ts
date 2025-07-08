@@ -11,11 +11,16 @@ import {
   deleteDoc,
   query,
   orderBy,
+  getDoc,
+  setDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import type { ExpenseCategoryDoc } from "@/lib/types";
+import type { ExpenseCategoryDoc, GlobalSettings } from "@/lib/types";
 
 const CATEGORIES_COLLECTION = "expense_categories";
+const SETTINGS_COLLECTION = "global_settings";
+const MAIN_SETTINGS_DOC_ID = "main";
+
 
 export async function getExpenseCategories(): Promise<ExpenseCategoryDoc[]> {
   const categoriesCol = collection(db, CATEGORIES_COLLECTION);
@@ -63,5 +68,30 @@ export async function deleteExpenseCategory(id: string) {
   } catch (error) {
     console.error("Error deleting expense category: ", error);
     return { success: false, message: "Gagal menghapus kategori. Pastikan tidak ada pengeluaran yang menggunakan kategori ini." };
+  }
+}
+
+export async function getGlobalSettings(): Promise<GlobalSettings> {
+  const settingsRef = doc(db, SETTINGS_COLLECTION, MAIN_SETTINGS_DOC_ID);
+  const docSnap = await getDoc(settingsRef);
+
+  if (docSnap.exists()) {
+    return { id: docSnap.id, ...docSnap.data() } as GlobalSettings;
+  } else {
+    // Return default settings if not found
+    return { defaultDiscount: 0 };
+  }
+}
+
+export async function updateGlobalSettings(data: Partial<Omit<GlobalSettings, 'id'>>) {
+  try {
+    const settingsRef = doc(db, SETTINGS_COLLECTION, MAIN_SETTINGS_DOC_ID);
+    await setDoc(settingsRef, data, { merge: true });
+    revalidatePath("/dashboard/settings");
+    revalidatePath("/dashboard"); // For sales page
+    return { success: true, message: "Pengaturan berhasil diperbarui." };
+  } catch (error) {
+    console.error("Error updating global settings: ", error);
+    return { success: false, message: "Gagal memperbarui pengaturan." };
   }
 }

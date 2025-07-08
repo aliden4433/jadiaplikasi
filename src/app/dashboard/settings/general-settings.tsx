@@ -5,7 +5,7 @@ import { useTheme } from "next-themes"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { Monitor, Moon, Sun, AlertTriangle } from "lucide-react"
+import { Monitor, Moon, Sun, AlertTriangle, Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -34,53 +34,58 @@ import { useAuth } from "@/hooks/use-auth"
 import { Badge } from "@/components/ui/badge"
 import { useDangerZone } from "@/context/danger-zone-context"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import type { GlobalSettings } from "@/lib/types"
+import { updateGlobalSettings } from "./actions"
 
 const discountFormSchema = z.object({
-  discount: z.coerce
+  defaultDiscount: z.coerce
     .number()
     .min(0, "Diskon tidak boleh negatif.")
     .max(100, "Diskon tidak boleh lebih dari 100."),
 })
 
-export function GeneralSettings() {
+interface GeneralSettingsProps {
+    initialSettings: GlobalSettings;
+}
+
+export function GeneralSettings({ initialSettings }: GeneralSettingsProps) {
   const { theme, setTheme } = useTheme()
   const { toast } = useToast()
   const { user } = useAuth()
   
   const [mounted, setMounted] = useState(false)
-  const [defaultDiscount, setDefaultDiscount] = useState(0)
   const { isDangerZoneActive, activateDangerZone, deactivateDangerZone } = useDangerZone()
   const [password, setPassword] = useState("")
 
   useEffect(() => {
     setMounted(true)
-    const savedDiscount = localStorage.getItem("defaultDiscount")
-    if (savedDiscount) {
-      const parsedDiscount = parseFloat(savedDiscount)
-      if (!isNaN(parsedDiscount)) {
-        setDefaultDiscount(parsedDiscount)
-      }
-    }
   }, [])
 
   const discountForm = useForm<z.infer<typeof discountFormSchema>>({
     resolver: zodResolver(discountFormSchema),
     values: {
-      discount: defaultDiscount,
+      defaultDiscount: initialSettings.defaultDiscount || 0,
     },
   })
 
   useEffect(() => {
-    discountForm.reset({ discount: defaultDiscount })
-  }, [defaultDiscount, discountForm])
+    discountForm.reset({ defaultDiscount: initialSettings.defaultDiscount || 0 })
+  }, [initialSettings, discountForm])
 
-  function onDiscountSubmit(values: z.infer<typeof discountFormSchema>) {
-    localStorage.setItem("defaultDiscount", values.discount.toString())
-    setDefaultDiscount(values.discount)
-    toast({
-      title: "Pengaturan Disimpan",
-      description: `Diskon default telah diatur ke ${values.discount}%.`,
-    })
+  async function onDiscountSubmit(values: z.infer<typeof discountFormSchema>) {
+    const result = await updateGlobalSettings(values);
+    if (result.success) {
+      toast({
+        title: "Pengaturan Disimpan",
+        description: `Diskon default telah diatur ke ${values.defaultDiscount}%.`,
+      })
+    } else {
+       toast({
+        variant: "destructive",
+        title: "Gagal Menyimpan",
+        description: result.message,
+      })
+    }
   }
 
   const handleActivation = () => {
@@ -89,6 +94,8 @@ export function GeneralSettings() {
       setPassword("")
     }
   }
+
+  const { isSubmitting } = discountForm.formState;
 
   return (
     <>
@@ -156,7 +163,7 @@ export function GeneralSettings() {
             <form onSubmit={discountForm.handleSubmit(onDiscountSubmit)} className="space-y-6">
               <FormField
                 control={discountForm.control}
-                name="discount"
+                name="defaultDiscount"
                 render={({ field }) => (
                   <FormItem className="max-w-sm">
                     <FormLabel>Diskon Default (%)</FormLabel>
@@ -170,7 +177,10 @@ export function GeneralSettings() {
                   </FormItem>
                 )}
               />
-              <Button type="submit">Simpan Diskon</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Simpan Diskon
+              </Button>
             </form>
           </Form>
         </CardContent>
