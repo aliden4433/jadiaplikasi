@@ -298,8 +298,11 @@ export function SalesHistoryList({ sales: initialSales, expenses: initialExpense
                                 </p>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <p className="font-bold text-base text-primary">{formatCurrency(sale.total)}</p>
+                            <div className="flex items-center gap-4">
+                                <div className="text-right">
+                                    <p className="font-bold text-base text-primary">{formatCurrency(sale.total)}</p>
+                                    <p className="text-xs text-muted-foreground hidden sm:block">{sale.items.reduce((acc, item) => acc + item.quantity, 0)} produk</p>
+                                </div>
                                 <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
                             </div>
                           </AccordionPrimitive.Trigger>
