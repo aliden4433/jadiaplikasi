@@ -100,7 +100,7 @@ function DashboardLayoutContent({
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+        <header className="sticky top-0 z-10 flex h-12 items-center gap-4 border-b bg-background px-2 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <SidebarTrigger className="sm:hidden" />
           {state === 'collapsed' && !isMobile && (
             <Button variant="ghost" size="icon" onClick={toggleSidebar} className="h-8 w-8">
@@ -110,7 +110,7 @@ function DashboardLayoutContent({
           )}
           <h1 className="text-xl font-semibold">{currentPage?.label}</h1>
         </header>
-        <main className="p-4 sm:px-6 sm:py-0">{children}</main>
+        <main className="p-2 sm:px-6 sm:py-0">{children}</main>
       </SidebarInset>
     </>
   )
