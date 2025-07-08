@@ -4,13 +4,14 @@
   "description": "Aplikasi kasir POS (Point of Sale) serbaguna dari Kasir Kilat.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#E3F2FD",
-  "theme_color": "#4285F4",
+  "background_color": "#ffffff",
+  "theme_color": "#2176ff",
   "icons": [
     {
-      "src": "logo.svg",
-      "sizes": "any",
-      "type": "image/svg+xml"
+      "src": "/logo.svg",
+      "sizes": "48x48 72x72 96x96 128x128 256x256 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ]
 }
