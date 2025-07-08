@@ -4,6 +4,7 @@
 import { useState, useMemo, useEffect } from "react"
 import { Trash2, ShoppingCart, Loader2, Calendar as CalendarIcon, ChevronDown, PlusCircle } from "lucide-react"
 import { format } from "date-fns"
+import { motion } from "framer-motion"
 
 import { addSale } from "./sales/actions"
 import type { CartItem, Product, Sale, ExpenseCategoryDoc, GlobalSettings } from "@/lib/types"
@@ -253,7 +254,15 @@ export function SalesClientPage({ products, sales, categories, initialSettings }
         ) : (
           <div className="space-y-4">
             {cart.map((item) => (
-              <div key={item.product.id} className="space-y-2 border-b border-border pb-3 last:border-b-0">
+               <motion.div
+                key={item.product.id}
+                layout
+                initial={{ scale: 1, opacity: 1 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                className="space-y-2 border-b border-border pb-3 last:border-b-0"
+              >
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-sm font-medium break-words flex-grow pr-2">{item.product.name}</p>
                   <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0 -mt-1 -mr-2" onClick={() => removeFromCart(item.product.id!)}>
@@ -284,7 +293,7 @@ export function SalesClientPage({ products, sales, categories, initialSettings }
                     />
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
@@ -317,7 +326,12 @@ export function SalesClientPage({ products, sales, categories, initialSettings }
                         <Calendar
                             mode="single"
                             selected={transactionDate}
-                            onSelect={(date) => setTransactionDate(date || new Date())}
+                            onSelect={(date) => {
+                                const newDate = date || new Date();
+                                const now = new Date();
+                                newDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
+                                setTransactionDate(newDate);
+                            }}
                             initialFocus
                         />
                     </PopoverContent>
@@ -374,7 +388,12 @@ export function SalesClientPage({ products, sales, categories, initialSettings }
                             <Calendar
                                 mode="single"
                                 selected={transactionDate}
-                                onSelect={(date) => setTransactionDate(date || new Date())}
+                                onSelect={(date) => {
+                                    const newDate = date || new Date();
+                                    const now = new Date();
+                                    newDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
+                                    setTransactionDate(newDate);
+                                }}
                                 initialFocus
                             />
                         </PopoverContent>
