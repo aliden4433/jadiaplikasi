@@ -1,6 +1,6 @@
-
 "use client"
 
+import * as React from "react"
 import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
 import type { DateRange } from "react-day-picker"
@@ -219,6 +219,8 @@ export function ReportsClientPage({ initialSales, products, initialExpenses }: R
                 child ? <CarouselItem key={index} className="basis-4/5 sm:basis-1/2">{child}</CarouselItem> : null
             ))}
           </CarouselContent>
+          <CarouselPrevious className="hidden sm:flex" />
+          <CarouselNext className="hidden sm:flex" />
         </Carousel>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
