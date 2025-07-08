@@ -48,7 +48,7 @@ export function SalesClientPage({ products, sales, categories, initialSettings }
   const [transactionDate, setTransactionDate] = useState<Date>()
   const [isProcessing, setIsProcessing] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
-  const [sortOrder, setSortOrder] = useState("name-asc")
+  const [sortOrder, setSortOrder] = useState("bestsellers")
   const { toast } = useToast()
   const isMobile = useIsMobile()
   const [variantSelection, setVariantSelection] = useState<Product[] | null>(null)
@@ -212,6 +212,9 @@ export function SalesClientPage({ products, sales, categories, initialSettings }
         setCart([])
         setDiscount(settings.defaultDiscount || 0)
         setTransactionDate(new Date())
+        if (isMobile) {
+            setIsCartOpen(false);
+        }
       } else {
         toast({
           variant: "destructive",
@@ -457,18 +460,6 @@ export function SalesClientPage({ products, sales, categories, initialSettings }
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full"
             />
-            <Select value={sortOrder} onValueChange={setSortOrder}>
-                <SelectTrigger className="w-full">
-                <SelectValue placeholder="Urutkan" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="name-asc">Nama (A-Z)</SelectItem>
-                    <SelectItem value="name-desc">Nama (Z-A)</SelectItem>
-                    <SelectItem value="price-asc">Harga (Rendah ke Tinggi)</SelectItem>
-                    <SelectItem value="price-desc">Harga (Tinggi ke Rendah)</SelectItem>
-                    <SelectItem value="bestsellers">Produk Terlaris</SelectItem>
-                </SelectContent>
-            </Select>
 
              <div className="divide-y divide-border rounded-md border">
                 {productGroups.length > 0 ? (
@@ -530,7 +521,13 @@ export function SalesClientPage({ products, sales, categories, initialSettings }
         </div>
         
         {totalItemsInCart > 0 && (
-          <Drawer open={isCartOpen} onOpenChange={setIsCartOpen}>
+          <Drawer open={isCartOpen} onOpenChange={(open) => {
+              if (!open && cart.length > 0) {
+                  setIsCartOpen(true); // Prevent closing if cart is not empty
+              } else {
+                  setIsCartOpen(open);
+              }
+          }}>
             <DrawerTrigger asChild>{CartTrigger}</DrawerTrigger>
             <DrawerContent className="w-full p-0 flex flex-col h-[90vh]">
               <DrawerHeader className="p-4 pb-2 border-b">
@@ -569,20 +566,8 @@ export function SalesClientPage({ products, sales, categories, initialSettings }
                     placeholder="Cari produk..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full md:w-64"
+                    className="w-full md:w-[400px]"
                 />
-                <Select value={sortOrder} onValueChange={setSortOrder}>
-                    <SelectTrigger className="w-full md:w-[220px]">
-                    <SelectValue placeholder="Urutkan" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="name-asc">Nama (A-Z)</SelectItem>
-                        <SelectItem value="name-desc">Nama (Z-A)</SelectItem>
-                        <SelectItem value="price-asc">Harga (Rendah ke Tinggi)</SelectItem>
-                        <SelectItem value="price-desc">Harga (Tinggi ke Rendah)</SelectItem>
-                        <SelectItem value="bestsellers">Produk Terlaris</SelectItem>
-                    </SelectContent>
-                </Select>
             </div>
           </div>
         </CardHeader>
