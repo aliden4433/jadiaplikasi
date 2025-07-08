@@ -37,7 +37,6 @@ export function BestsellersChart({ data }: BestsellersChartProps) {
             axisLine={false}
             angle={-45}
             textAnchor="end"
-            interval={0}
           />
           <YAxis />
           <ChartTooltip

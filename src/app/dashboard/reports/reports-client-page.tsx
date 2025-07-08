@@ -7,7 +7,7 @@ import type { DateRange } from "react-day-picker"
 import { addDays, format } from "date-fns"
 import { Calendar as CalendarIcon, DollarSign, Package, ShoppingBag, TrendingUp, Wallet } from "lucide-react"
 
-import type { Product, Sale, SaleItem, Expense } from "@/lib/types"
+import type { Product, Sale, Expense } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/popover"
 import { BestsellersChart } from "./charts"
 import { useAuth } from "@/hooks/use-auth"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
 
 interface ReportsClientPageProps {
   initialSales: Sale[]
@@ -29,6 +31,7 @@ interface ReportsClientPageProps {
 export function ReportsClientPage({ initialSales, products, initialExpenses }: ReportsClientPageProps) {
   const { user } = useAuth()
   const userRole = user?.role
+  const isMobile = useIsMobile();
 
   const [date, setDate] = useState<DateRange | undefined>(undefined)
 
@@ -96,6 +99,78 @@ export function ReportsClientPage({ initialSales, products, initialExpenses }: R
 
   const allTimeSalesCount = initialSales.length;
 
+  const StatCards = (
+    <>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Pendapatan</CardTitle>
+          <DollarSign className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-xl font-bold">
+            {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(revenue)}
+          </div>
+          <p className="text-xs text-muted-foreground">dari {count} penjualan di periode ini</p>
+        </CardContent>
+      </Card>
+      
+      {userRole === 'admin' && (
+        <>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pengeluaran</CardTitle>
+              <Wallet className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl font-bold">
+                {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(totalExpenses)}
+              </div>
+              <p className="text-xs text-muted-foreground">Total pengeluaran di periode ini</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Laba Bersih</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className={cn(
+                "text-xl font-bold",
+                netProfit < 0 && "text-destructive"
+              )}>
+                {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(netProfit)}
+              </div>
+              <p className="text-xs text-muted-foreground">Laba kotor (penjualan - HPP) dikurangi pengeluaran.</p>
+            </CardContent>
+          </Card>
+        </>
+      )}
+      
+      <Link href="/dashboard/sales-history" className="block h-full">
+        <Card className="hover:bg-accent transition-colors h-full">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Penjualan</CardTitle>
+            <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold">{allTimeSalesCount}</div>
+            <p className="text-xs text-muted-foreground">Total transaksi (semua waktu)</p>
+          </CardContent>
+        </Card>
+      </Link>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Produk Aktif</CardTitle>
+          <Package className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-xl font-bold">{products.length}</div>
+          <p className="text-xs text-muted-foreground">Produk dalam katalog</p>
+        </CardContent>
+      </Card>
+    </>
+  );
+
   return (
     <div className="space-y-8">
       <div className="flex justify-end">
@@ -105,7 +180,7 @@ export function ReportsClientPage({ initialSales, products, initialExpenses }: R
                 id="date"
                 variant={"outline"}
                 className={cn(
-                  "w-[300px] justify-start text-left font-normal",
+                  "w-full sm:w-[300px] justify-start text-left font-normal",
                   !date && "text-muted-foreground"
                 )}
               >
@@ -131,80 +206,26 @@ export function ReportsClientPage({ initialSales, products, initialExpenses }: R
                 defaultMonth={date?.from}
                 selected={date}
                 onSelect={setDate}
-                numberOfMonths={2}
+                numberOfMonths={isMobile ? 1 : 2}
               />
             </PopoverContent>
           </Popover>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pendapatan</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold">
-              {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(revenue)}
-            </div>
-            <p className="text-xs text-muted-foreground">dari {count} penjualan di periode ini</p>
-          </CardContent>
-        </Card>
-        
-        {userRole === 'admin' && (
-          <>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pengeluaran</CardTitle>
-                <Wallet className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-xl font-bold">
-                  {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(totalExpenses)}
-                </div>
-                <p className="text-xs text-muted-foreground">Total pengeluaran di periode ini</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Laba Bersih</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className={cn(
-                  "text-xl font-bold",
-                  netProfit < 0 && "text-destructive"
-                )}>
-                  {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(netProfit)}
-                </div>
-                <p className="text-xs text-muted-foreground">Laba kotor (penjualan - HPP) dikurangi pengeluaran.</p>
-              </CardContent>
-            </Card>
-          </>
-        )}
-        
-        <Link href="/dashboard/sales-history" className="block">
-          <Card className="hover:bg-accent transition-colors h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Penjualan</CardTitle>
-              <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl font-bold">{allTimeSalesCount}</div>
-              <p className="text-xs text-muted-foreground">Total transaksi (semua waktu)</p>
-            </CardContent>
-          </Card>
-        </Link>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Produk Aktif</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold">{products.length}</div>
-            <p className="text-xs text-muted-foreground">Produk dalam katalog</p>
-          </CardContent>
-        </Card>
-      </div>
+
+      {isMobile ? (
+        <Carousel opts={{ align: "start" }} className="w-full">
+          <CarouselContent>
+            {React.Children.map(StatCards.props.children, (child, index) => (
+                child ? <CarouselItem key={index} className="basis-4/5 sm:basis-1/2">{child}</CarouselItem> : null
+            ))}
+          </CarouselContent>
+        </Carousel>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            {StatCards}
+        </div>
+      )}
+
 
       <Card>
         <CardHeader>

@@ -35,6 +35,7 @@ import { ExportSalesButton } from "./export-sales-button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useDangerZone } from "@/context/danger-zone-context";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SalesHistoryListProps {
   sales: Sale[];
@@ -50,6 +51,7 @@ export function SalesHistoryList({ sales: initialSales, expenses: initialExpense
   const { user } = useAuth();
   const { isDangerZoneActive } = useDangerZone();
   const userRole = user?.role;
+  const isMobile = useIsMobile();
   const [date, setDate] = useState<DateRange | undefined>(undefined);
 
   useEffect(() => {
@@ -237,7 +239,7 @@ export function SalesHistoryList({ sales: initialSales, expenses: initialExpense
                         defaultMonth={date?.from}
                         selected={date}
                         onSelect={setDate}
-                        numberOfMonths={2}
+                        numberOfMonths={isMobile ? 1 : 2}
                       />
                     </PopoverContent>
                   </Popover>
@@ -315,7 +317,7 @@ export function SalesHistoryList({ sales: initialSales, expenses: initialExpense
                                 className={cn(
                                     buttonVariants({ variant: "ghost", size: "icon" }),
                                     "h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive",
-                                    isDangerZoneActive ? "opacity-0 group-hover:opacity-100 transition-opacity" : "opacity-50 cursor-not-allowed"
+                                    isDangerZoneActive ? (isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100 transition-opacity") : "opacity-50 cursor-not-allowed"
                                 )}
                                 onClick={(e) => {
                                   e.stopPropagation();
