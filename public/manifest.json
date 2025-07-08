@@ -2,16 +2,16 @@
   "name": "Kasir Kilat",
   "short_name": "KasirKilat",
   "description": "Aplikasi kasir POS (Point of Sale) serbaguna dari Kasir Kilat.",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#2176ff",
   "icons": [
     {
       "src": "/logo.svg",
-      "sizes": "48x48 72x72 96x96 128x128 256x256 512x512",
-      "type": "image/svg+xml",
-      "purpose": "any"
+      "sizes": "any",
+      "type": "image/svg+xml"
     }
-  ]
+  ],
+  "theme_color": "#2176ff",
+  "background_color": "#EAF6FE",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "orientation": "portrait"
 }
