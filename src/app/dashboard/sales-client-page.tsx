@@ -34,7 +34,6 @@ import { cn } from "@/lib/utils"
 import { Calendar } from "@/components/ui/calendar"
 import { ProductVariantDialog } from "./sales/product-variant-dialog"
 import { ExpenseFormDialog } from "@/app/dashboard/expenses/expense-form-dialog"
-import { getGlobalSettings } from "./settings/actions"
 
 interface SalesClientPageProps {
   products: Product[]
@@ -54,18 +53,28 @@ export function SalesClientPage({ products, sales, categories, initialSettings }
   const isMobile = useIsMobile()
   const [variantSelection, setVariantSelection] = useState<Product[] | null>(null)
   const [settings, setSettings] = useState<GlobalSettings>(initialSettings);
-
-
-  useEffect(() => {
-    // Only set the date on initial mount
-    setTransactionDate(new Date());
-  }, []);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   useEffect(() => {
     // This will react to any updates to the initialSettings prop from the server
     setSettings(initialSettings);
     setDiscount(initialSettings.defaultDiscount || 0);
   }, [initialSettings]);
+
+  useEffect(() => {
+    // Only set the date on initial mount
+    setTransactionDate(new Date());
+  }, []);
+  
+  const totalItemsInCart = useMemo(() => cart.reduce((acc, item) => acc + item.quantity, 0), [cart]);
+
+  useEffect(() => {
+    // This effect ensures that if the cart is emptied (e.g., after a sale),
+    // the drawer will close.
+    if (totalItemsInCart === 0) {
+      setIsCartOpen(false);
+    }
+  }, [totalItemsInCart]);
 
 
   const salesCount = useMemo(() => {
@@ -119,6 +128,11 @@ export function SalesClientPage({ products, sales, categories, initialSettings }
 
 
   const addToCart = (product: Product, quantity: number = 1, showToast = true) => {
+    // If this is the first item being added on mobile, open the drawer.
+    if (isMobile && totalItemsInCart === 0) {
+      setIsCartOpen(true);
+    }
+
     setCart((prevCart) => {
       const itemInCart = prevCart.find((item) => item.product.id === product.id)
 
@@ -169,7 +183,6 @@ export function SalesClientPage({ products, sales, categories, initialSettings }
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0)
   const discountAmount = subtotal * (discount / 100)
   const total = subtotal - discountAmount
-  const totalItemsInCart = cart.reduce((acc, item) => acc + item.quantity, 0)
 
   async function handleProcessSale() {
     if (cart.length === 0) {
@@ -523,17 +536,19 @@ export function SalesClientPage({ products, sales, categories, initialSettings }
                 )}
             </div>
         </div>
-
-        <Drawer open={totalItemsInCart > 0} onOpenChange={(open) => !open && setCart([])}>
-          <DrawerTrigger asChild>{CartTrigger}</DrawerTrigger>
-          <DrawerContent className="w-full p-0 flex flex-col h-[90vh]">
-             <DrawerHeader className="p-4 pb-2 border-b">
-               <DrawerTitle>Pesanan Saat Ini</DrawerTitle>
-             </DrawerHeader>
-             {CartItems}
-             {CartSummary}
-          </DrawerContent>
-        </Drawer>
+        
+        {totalItemsInCart > 0 && (
+          <Drawer open={isCartOpen} onOpenChange={setIsCartOpen}>
+            <DrawerTrigger asChild>{CartTrigger}</DrawerTrigger>
+            <DrawerContent className="w-full p-0 flex flex-col h-[90vh]">
+              <DrawerHeader className="p-4 pb-2 border-b">
+                <DrawerTitle>Pesanan Saat Ini</DrawerTitle>
+              </DrawerHeader>
+              {CartItems}
+              {CartSummary}
+            </DrawerContent>
+          </Drawer>
+        )}
         
         <ProductVariantDialog
           productGroup={variantSelection}
