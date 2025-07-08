@@ -1,4 +1,5 @@
 
+
 export type Product = {
   id?: string
   name: string
@@ -63,4 +64,14 @@ export type Expense = {
 export type GlobalSettings = {
   id?: string;
   defaultDiscount?: number;
+};
+
+export type ActivityLogItem = {
+  id: string;
+  type: "sale" | "expense";
+  date: string;
+  description: string;
+  amount: number;
+  details: Sale | Expense;
+  user?: string;
 };

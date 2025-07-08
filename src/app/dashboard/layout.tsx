@@ -1,8 +1,9 @@
+
 "use client"
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart2, History, LogOut, Package, ShoppingCart, UserCircle, PanelLeft, Settings, Wallet, PanelLeftClose, PanelLeftOpen } from "lucide-react"
+import { BarChart2, BookCopy, History, LogOut, Package, ShoppingCart, UserCircle, PanelLeft, Settings, Wallet, PanelLeftClose, PanelLeftOpen } from "lucide-react"
 
 import {
   Sidebar,
@@ -28,6 +29,7 @@ const allNavItems = [
   { href: "/dashboard/sales-history", icon: History, label: "Riwayat Penjualan" },
   { href: "/dashboard/expenses", icon: Wallet, label: "Pengeluaran", roles: ["admin", "cashier"] },
   { href: "/dashboard/reports", icon: BarChart2, label: "Laporan", roles: ["admin"] },
+  { href: "/dashboard/activity-log", icon: BookCopy, label: "Log Aktivitas", roles: ["admin"] },
   { href: "/dashboard/settings", icon: Settings, label: "Pengaturan", roles: ["admin"] },
 ];
 
