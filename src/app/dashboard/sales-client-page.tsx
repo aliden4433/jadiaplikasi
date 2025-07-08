@@ -6,7 +6,7 @@ import { Trash2, ShoppingCart, Loader2, Calendar as CalendarIcon, ChevronDown, P
 import { format } from "date-fns"
 
 import { addSale } from "./sales/actions"
-import type { CartItem, Product, Sale, ExpenseCategoryDoc } from "@/lib/types"
+import type { CartItem, Product, Sale, ExpenseCategoryDoc, GlobalSettings } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -22,36 +22,30 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { Calendar } from "@/components/ui/calendar"
 import { ProductVariantDialog } from "./sales/product-variant-dialog"
 import { ExpenseFormDialog } from "@/app/dashboard/expenses/expense-form-dialog"
+import { getGlobalSettings } from "./settings/actions"
 
 interface SalesClientPageProps {
   products: Product[]
   sales: Sale[]
   categories: ExpenseCategoryDoc[]
+  initialSettings: GlobalSettings
 }
 
-const getInitialDiscount = () => {
-    if (typeof window === "undefined") {
-      return 0; // Default for SSR
-    }
-    const savedDiscount = localStorage.getItem("defaultDiscount");
-    return savedDiscount ? parseFloat(savedDiscount) : 0;
-};
-
-export function SalesClientPage({ products, sales, categories }: SalesClientPageProps) {
+export function SalesClientPage({ products, sales, categories, initialSettings }: SalesClientPageProps) {
   const [cart, setCart] = useState<CartItem[]>([])
-  const [discount, setDiscount] = useState(0) // Percentage
+  const [discount, setDiscount] = useState(initialSettings.defaultDiscount || 0)
   const [transactionDate, setTransactionDate] = useState<Date>()
   const [isProcessing, setIsProcessing] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
@@ -59,12 +53,20 @@ export function SalesClientPage({ products, sales, categories }: SalesClientPage
   const { toast } = useToast()
   const isMobile = useIsMobile()
   const [variantSelection, setVariantSelection] = useState<Product[] | null>(null)
+  const [settings, setSettings] = useState<GlobalSettings>(initialSettings);
 
-  // Load initial discount and date on client side
+
   useEffect(() => {
-    setDiscount(getInitialDiscount());
+    // Only set the date on initial mount
     setTransactionDate(new Date());
   }, []);
+
+  useEffect(() => {
+    // This will react to any updates to the initialSettings prop from the server
+    setSettings(initialSettings);
+    setDiscount(initialSettings.defaultDiscount || 0);
+  }, [initialSettings]);
+
 
   const salesCount = useMemo(() => {
     const counts: { [key: string]: number } = {};
@@ -204,7 +206,7 @@ export function SalesClientPage({ products, sales, categories }: SalesClientPage
           description: result.message,
         })
         setCart([])
-        setDiscount(getInitialDiscount())
+        setDiscount(settings.defaultDiscount || 0)
         setTransactionDate(new Date())
       } else {
         toast({
@@ -295,19 +297,19 @@ export function SalesClientPage({ products, sales, categories }: SalesClientPage
       {cart.length > 0 && (
         <>
           <Separator />
-          <div className="p-4 space-y-4">
-            <div className="flex justify-between items-center">
+          <div className="p-4 space-y-2">
+            <div className="flex justify-between items-center text-sm">
               <p>Tanggal Transaksi</p>
                 <Popover>
                     <PopoverTrigger asChild>
                         <Button
                             variant={"outline"}
                             className={cn(
-                                "w-auto justify-start text-left font-normal",
+                                "w-auto justify-start text-left font-normal h-8 text-xs px-2",
                                 !transactionDate && "text-muted-foreground"
                             )}
                         >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            <CalendarIcon className="mr-1 h-3 w-3" />
                             {transactionDate ? format(transactionDate, "dd MMM yyyy") : <span>Pilih tanggal</span>}
                         </Button>
                     </PopoverTrigger>
@@ -321,21 +323,8 @@ export function SalesClientPage({ products, sales, categories }: SalesClientPage
                     </PopoverContent>
                 </Popover>
             </div>
-            <div className="flex justify-between">
-              <p>Subtotal</p>
-              <p>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(subtotal)}</p>
-            </div>
-            <div className="flex justify-between items-center">
-              <p>Diskon</p>
-              <p className="font-medium text-muted-foreground">{discount}%</p>
-            </div>
-            {discount > 0 && (
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <p>Potongan Diskon</p>
-                <p>-{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(discountAmount)}</p>
-              </div>
-            )}
-            <Separator />
+          </div>
+          <div className="p-4 pt-0">
             <div className="flex justify-between font-bold text-lg">
               <p>Total</p>
               <p>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(total)}</p>
@@ -362,7 +351,65 @@ export function SalesClientPage({ products, sales, categories }: SalesClientPage
         <CardContent className="p-0 flex-grow overflow-hidden flex flex-col">
             {CartItems}
         </CardContent>
-        {CartSummary}
+        {cart.length > 0 && (
+            <>
+            <Separator />
+            <div className="p-4 space-y-4">
+                <div className="flex justify-between items-center">
+                <p>Tanggal Transaksi</p>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant={"outline"}
+                                className={cn(
+                                    "w-auto justify-start text-left font-normal",
+                                    !transactionDate && "text-muted-foreground"
+                                )}
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {transactionDate ? format(transactionDate, "dd MMM yyyy") : <span>Pilih tanggal</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="end">
+                            <Calendar
+                                mode="single"
+                                selected={transactionDate}
+                                onSelect={(date) => setTransactionDate(date || new Date())}
+                                initialFocus
+                            />
+                        </PopoverContent>
+                    </Popover>
+                </div>
+                <div className="flex justify-between">
+                <p>Subtotal</p>
+                <p>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(subtotal)}</p>
+                </div>
+                <div className="flex justify-between items-center">
+                <p>Diskon</p>
+                <p className="font-medium text-muted-foreground">{discount}%</p>
+                </div>
+                {discount > 0 && (
+                <div className="flex justify-between text-sm text-muted-foreground">
+                    <p>Potongan Diskon</p>
+                    <p>-{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(discountAmount)}</p>
+                </div>
+                )}
+                <Separator />
+                <div className="flex justify-between font-bold text-lg">
+                <p>Total</p>
+                <p>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(total)}</p>
+                </div>
+            </div>
+            <CardFooter className="p-4 pt-0">
+                <Button className="w-full" onClick={handleProcessSale} disabled={isProcessing}>
+                    {isProcessing ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : null}
+                    {isProcessing ? "Memproses..." : `Catat Transaksi (${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(total)})`}
+                </Button>
+            </CardFooter>
+            </>
+        )}
     </Card>
   )
 
@@ -464,16 +511,16 @@ export function SalesClientPage({ products, sales, categories }: SalesClientPage
             </div>
         </div>
 
-        <Sheet>
-          <SheetTrigger asChild>{CartTrigger}</SheetTrigger>
-          <SheetContent side="bottom" className="w-full p-0 flex flex-col h-[90vh]">
-             <SheetHeader className="p-4 pb-2 border-b">
-               <SheetTitle>Pesanan Saat Ini</SheetTitle>
-             </SheetHeader>
+        <Drawer open={totalItemsInCart > 0} onOpenChange={(open) => !open && setCart([])}>
+          <DrawerTrigger asChild>{CartTrigger}</DrawerTrigger>
+          <DrawerContent className="w-full p-0 flex flex-col h-[90vh]">
+             <DrawerHeader className="p-4 pb-2 border-b">
+               <DrawerTitle>Pesanan Saat Ini</DrawerTitle>
+             </DrawerHeader>
              {CartItems}
              {CartSummary}
-          </SheetContent>
-        </Sheet>
+          </DrawerContent>
+        </Drawer>
         
         <ProductVariantDialog
           productGroup={variantSelection}
