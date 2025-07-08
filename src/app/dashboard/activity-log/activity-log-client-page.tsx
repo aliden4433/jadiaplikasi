@@ -71,14 +71,14 @@ export function ActivityLogClientPage({ activities }: ActivityLogClientPageProps
             Belum ada aktivitas yang tercatat.
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-8">
             {sortedDates.map((date) => (
               <div key={date}>
                 <h3 className="mb-4 text-lg font-semibold">{date}</h3>
-                <div className="relative space-y-6 pl-6 after:absolute after:inset-y-0 after:left-3 after:w-px after:bg-border">
+                <div className="relative space-y-8 pl-8 after:absolute after:inset-y-0 after:left-4 after:w-px after:bg-border">
                   {groupedActivities[date].map((activity) => (
                     <div key={activity.id} className="relative flex items-start gap-4">
-                      <div className="absolute -left-[2px] top-1 z-10">
+                      <div className="absolute -left-8 top-0 z-10">
                         <ActivityIcon type={activity.type} />
                       </div>
                       <div className="grid flex-1 gap-1">
