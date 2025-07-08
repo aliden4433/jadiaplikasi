@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from "react"
@@ -28,6 +27,7 @@ import type { Product } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { deleteProduct, duplicateProduct } from "./actions"
 import { ProductFormDialog } from "./product-form-dialog"
+import { useDangerZone } from "@/context/danger-zone-context"
 
 interface ProductRowActionsProps {
   product: Product
@@ -39,6 +39,7 @@ export function ProductRowActions({ product }: ProductRowActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [isDuplicating, setIsDuplicating] = useState(false)
   const { toast } = useToast()
+  const { isDangerZoneActive } = useDangerZone()
 
   async function handleDuplicate() {
     if (!product) return;
@@ -131,6 +132,7 @@ export function ProductRowActions({ product }: ProductRowActionsProps) {
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => setIsDeleteDialogOpen(true)}
+            disabled={!isDangerZoneActive}
             className="text-red-600 focus:bg-red-50 focus:text-red-600"
           >
             <Trash2 className="mr-2 h-4 w-4" />
