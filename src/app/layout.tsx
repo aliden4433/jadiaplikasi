@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   title: 'Kasir Kilat',
   description: 'Aplikasi kasir POS (Point of Sale) serbaguna dari Kasir Kilat.',
   icons: [{ rel: "icon", url: "/logo.svg" }],
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -20,6 +21,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" suppressHydrationWarning>
+       <head>
+        <meta name="theme-color" content="#2176ff" />
+      </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <AuthProvider>
           <ThemeProvider
