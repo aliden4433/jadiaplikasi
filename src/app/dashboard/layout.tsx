@@ -28,7 +28,7 @@ const allNavItems = [
   { href: "/dashboard/products", icon: Package, label: "Produk", roles: ["admin"] },
   { href: "/dashboard/sales-history", icon: History, label: "Riwayat Penjualan" },
   { href: "/dashboard/expenses", icon: Wallet, label: "Pengeluaran", roles: ["admin", "cashier"] },
-  { href: "/dashboard/reports", icon: BarChart2, label: "Laporan", roles: ["admin"] },
+  { href: "/dashboard/reports", icon: BarChart2, label: "Laporan", roles: ["admin", "cashier"] },
   { href: "/dashboard/activity-log", icon: BookCopy, label: "Log Aktivitas", roles: ["admin"] },
   { href: "/dashboard/settings", icon: Settings, label: "Pengaturan", roles: ["admin"] },
 ];

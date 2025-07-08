@@ -18,6 +18,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { BestsellersChart } from "./charts"
+import { useAuth } from "@/hooks/use-auth"
 
 interface ReportsClientPageProps {
   initialSales: Sale[]
@@ -26,6 +27,9 @@ interface ReportsClientPageProps {
 }
 
 export function ReportsClientPage({ initialSales, products, initialExpenses }: ReportsClientPageProps) {
+  const { user } = useAuth()
+  const userRole = user?.role
+
   const [date, setDate] = useState<DateRange | undefined>(undefined)
 
   useEffect(() => {
@@ -145,33 +149,39 @@ export function ReportsClientPage({ initialSales, products, initialExpenses }: R
             <p className="text-xs text-muted-foreground">dari {count} penjualan di periode ini</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pengeluaran</CardTitle>
-            <Wallet className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold">
-              {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(totalExpenses)}
-            </div>
-            <p className="text-xs text-muted-foreground">Total pengeluaran di periode ini</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Laba Bersih</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className={cn(
-              "text-xl font-bold",
-              netProfit < 0 && "text-destructive"
-            )}>
-              {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(netProfit)}
-            </div>
-            <p className="text-xs text-muted-foreground">Laba kotor (penjualan - HPP) dikurangi pengeluaran.</p>
-          </CardContent>
-        </Card>
+        
+        {userRole === 'admin' && (
+          <>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Pengeluaran</CardTitle>
+                <Wallet className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-xl font-bold">
+                  {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(totalExpenses)}
+                </div>
+                <p className="text-xs text-muted-foreground">Total pengeluaran di periode ini</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Laba Bersih</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className={cn(
+                  "text-xl font-bold",
+                  netProfit < 0 && "text-destructive"
+                )}>
+                  {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(netProfit)}
+                </div>
+                <p className="text-xs text-muted-foreground">Laba kotor (penjualan - HPP) dikurangi pengeluaran.</p>
+              </CardContent>
+            </Card>
+          </>
+        )}
+        
         <Link href="/dashboard/sales-history" className="block">
           <Card className="hover:bg-accent transition-colors h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
