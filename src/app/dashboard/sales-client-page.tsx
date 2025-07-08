@@ -21,6 +21,13 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
@@ -453,6 +460,18 @@ export function SalesClientPage({ products, sales, categories, initialSettings }
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full"
             />
+            <Select value={sortOrder} onValueChange={setSortOrder}>
+                <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Urutkan berdasarkan" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="bestsellers">Produk Terlaris</SelectItem>
+                    <SelectItem value="name-asc">Nama (A-Z)</SelectItem>
+                    <SelectItem value="name-desc">Nama (Z-A)</SelectItem>
+                    <SelectItem value="price-asc">Harga (Rendah ke Tinggi)</SelectItem>
+                    <SelectItem value="price-desc">Harga (Tinggi ke Rendah)</SelectItem>
+                </SelectContent>
+            </Select>
 
              <div className="divide-y divide-border rounded-md border">
                 {productGroups.length > 0 ? (
@@ -559,8 +578,20 @@ export function SalesClientPage({ products, sales, categories, initialSettings }
                     placeholder="Cari produk..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full md:w-[400px]"
+                    className="w-full md:w-[250px]"
                 />
+                <Select value={sortOrder} onValueChange={setSortOrder}>
+                    <SelectTrigger className="w-full md:w-[180px]">
+                        <SelectValue placeholder="Urutkan" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="bestsellers">Terlaris</SelectItem>
+                        <SelectItem value="name-asc">Nama (A-Z)</SelectItem>
+                        <SelectItem value="name-desc">Nama (Z-A)</SelectItem>
+                        <SelectItem value="price-asc">Harga (Murah)</SelectItem>
+                        <SelectItem value="price-desc">Harga (Mahal)</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
           </div>
         </CardHeader>
