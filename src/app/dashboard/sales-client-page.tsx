@@ -68,15 +68,6 @@ export function SalesClientPage({ products, sales, categories, initialSettings }
   
   const totalItemsInCart = useMemo(() => cart.reduce((acc, item) => acc + item.quantity, 0), [cart]);
 
-  useEffect(() => {
-    // This effect ensures that if the cart is emptied (e.g., after a sale),
-    // the drawer will close.
-    if (totalItemsInCart === 0) {
-      setIsCartOpen(false);
-    }
-  }, [totalItemsInCart]);
-
-
   const salesCount = useMemo(() => {
     const counts: { [key: string]: number } = {};
     if (!sales) return counts;
@@ -243,6 +234,7 @@ export function SalesClientPage({ products, sales, categories, initialSettings }
     <Button
       className="fixed bottom-8 right-8 rounded-full h-16 w-16 shadow-lg z-20 md:hidden"
       size="icon"
+      onClick={() => setIsCartOpen(true)}
     >
       <ShoppingCart className="h-7 w-7" />
       <span className="sr-only">Keranjang Belanja</span>
@@ -271,7 +263,7 @@ export function SalesClientPage({ products, sales, categories, initialSettings }
                 className="space-y-2 border-b border-border pb-3 last:border-b-0"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-medium break-words flex-grow pr-2">{item.product.name}</p>
+                  <p className="text-xs font-medium break-words flex-grow pr-2">{item.product.name}</p>
                   <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0 -mt-1 -mr-2" onClick={() => removeFromCart(item.product.id!)}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -284,7 +276,7 @@ export function SalesClientPage({ products, sales, categories, initialSettings }
                       type="number"
                       value={item.price}
                       onChange={(e) => updatePrice(item.product.id!, parseFloat(e.target.value))}
-                      className="w-28 h-9 text-sm"
+                      className="w-24 h-8 text-xs"
                       step="1000"
                     />
                   </div>
@@ -295,7 +287,7 @@ export function SalesClientPage({ products, sales, categories, initialSettings }
                       type="number"
                       value={item.quantity}
                       onChange={(e) => updateQuantity(item.product.id!, parseInt(e.target.value))}
-                      className="w-20 h-9 text-center text-sm"
+                      className="w-16 h-8 text-center text-xs"
                       min="1"
                     />
                   </div>
