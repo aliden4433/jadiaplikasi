@@ -5,7 +5,7 @@ import { useTheme } from "next-themes"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { Monitor, Moon, Sun, AlertTriangle, Loader2 } from "lucide-react"
+import { Monitor, Moon, Sun, AlertTriangle, Loader2, RefreshCw } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -35,7 +35,18 @@ import { Badge } from "@/components/ui/badge"
 import { useDangerZone } from "@/context/danger-zone-context"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import type { GlobalSettings } from "@/lib/types"
-import { updateGlobalSettings } from "./actions"
+import { synchronizeCostPrices, updateGlobalSettings } from "./actions"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const discountFormSchema = z.object({
   defaultDiscount: z.coerce
@@ -56,6 +67,9 @@ export function GeneralSettings({ initialSettings }: GeneralSettingsProps) {
   const [mounted, setMounted] = useState(false)
   const { isDangerZoneActive, activateDangerZone, deactivateDangerZone } = useDangerZone()
   const [password, setPassword] = useState("")
+
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [isSyncAlertOpen, setIsSyncAlertOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true)
@@ -86,6 +100,25 @@ export function GeneralSettings({ initialSettings }: GeneralSettingsProps) {
         description: result.message,
       })
     }
+  }
+  
+  async function handleSync() {
+    setIsSyncing(true);
+    const result = await synchronizeCostPrices();
+    if (result.success) {
+        toast({
+            title: "Sinkronisasi Berhasil",
+            description: result.message,
+        });
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Sinkronisasi Gagal",
+            description: result.message,
+        });
+    }
+    setIsSyncing(false);
+    setIsSyncAlertOpen(false);
   }
 
   const handleActivation = () => {
@@ -208,6 +241,40 @@ export function GeneralSettings({ initialSettings }: GeneralSettingsProps) {
                 )}
              </div>
            </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Sinkronisasi Data</CardTitle>
+            <CardDescription>
+                Perbarui harga modal di semua riwayat transaksi agar sesuai dengan data produk saat ini. Ini akan menghitung ulang laba untuk semua penjualan.
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
+            <AlertDialog open={isSyncAlertOpen} onOpenChange={setIsSyncAlertOpen}>
+                <AlertDialogTrigger asChild>
+                    <Button variant="outline">
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Sinkronkan Harga Modal
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Tindakan ini akan menimpa harga modal pada SEMUA transaksi sebelumnya dengan harga modal produk saat ini. Perhitungan laba juga akan diperbarui. Tindakan ini tidak dapat dibatalkan.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isSyncing}>Batal</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleSync} disabled={isSyncing}>
+                            {isSyncing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {isSyncing ? "Menyinkronkan..." : "Ya, Sinkronkan"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </CardContent>
       </Card>
 

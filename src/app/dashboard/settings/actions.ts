@@ -13,9 +13,10 @@ import {
   orderBy,
   getDoc,
   setDoc,
+  writeBatch,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import type { ExpenseCategoryDoc, GlobalSettings } from "@/lib/types";
+import type { ExpenseCategoryDoc, GlobalSettings, Product, Sale, SaleItem } from "@/lib/types";
 
 const CATEGORIES_COLLECTION = "expense_categories";
 const SETTINGS_COLLECTION = "global_settings";
@@ -93,5 +94,61 @@ export async function updateGlobalSettings(data: Partial<Omit<GlobalSettings, 'i
   } catch (error) {
     console.error("Error updating global settings: ", error);
     return { success: false, message: "Gagal memperbarui pengaturan." };
+  }
+}
+
+export async function synchronizeCostPrices() {
+  try {
+    const productsCol = collection(db, "products");
+    const productsSnapshot = await getDocs(productsCol);
+    const productMap = new Map<string, Product>();
+    productsSnapshot.docs.forEach(doc => {
+      productMap.set(doc.id, { id: doc.id, ...doc.data() } as Product);
+    });
+
+    const salesCol = collection(db, "sales");
+    const salesSnapshot = await getDocs(salesCol);
+
+    const batch = writeBatch(db);
+    let updatedSalesCount = 0;
+
+    salesSnapshot.docs.forEach(saleDoc => {
+      const sale = { id: saleDoc.id, ...saleDoc.data() } as Sale;
+      let needsUpdate = false;
+      
+      const newItems: SaleItem[] = sale.items.map(item => {
+        const product = productMap.get(item.productId);
+        if (product && item.costPrice !== product.costPrice) {
+          needsUpdate = true;
+          return { ...item, costPrice: product.costPrice };
+        }
+        return item;
+      });
+
+      if (needsUpdate) {
+        const newTotalCost = newItems.reduce((acc, item) => acc + (item.costPrice || 0) * item.quantity, 0);
+        const newProfit = sale.total - newTotalCost;
+        
+        const saleRef = saleDoc.ref;
+        batch.update(saleRef, {
+          items: newItems,
+          totalCost: newTotalCost,
+          profit: newProfit,
+        });
+        updatedSalesCount++;
+      }
+    });
+
+    if (updatedSalesCount > 0) {
+      await batch.commit();
+    }
+
+    revalidatePath("/dashboard/reports");
+    revalidatePath("/dashboard/sales-history");
+
+    return { success: true, message: `${updatedSalesCount} transaksi telah disinkronkan dengan harga modal terbaru.` };
+  } catch (error) {
+    console.error("Error synchronizing cost prices: ", error);
+    return { success: false, message: "Gagal menyinkronkan harga." };
   }
 }
