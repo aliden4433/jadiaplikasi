@@ -246,9 +246,10 @@ export function GeneralSettings({ initialSettings }: GeneralSettingsProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Sinkronisasi Data</CardTitle>
+          <CardTitle>Sinkronisasi Data (Tindakan Berisiko)</CardTitle>
             <CardDescription>
-                Perbarui harga modal di semua riwayat transaksi agar sesuai dengan data produk saat ini. Ini akan menghitung ulang laba untuk semua penjualan.
+                Perbaiki data historis dengan menimpa harga modal di semua riwayat transaksi.
+                <span className="font-bold text-destructive"> Gunakan dengan sangat hati-hati:</span> Fitur ini ideal untuk memperbaiki kesalahan data awal, bukan untuk pembaruan harga rutin.
             </CardDescription>
         </CardHeader>
         <CardContent>
@@ -261,16 +262,18 @@ export function GeneralSettings({ initialSettings }: GeneralSettingsProps) {
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
+                        <AlertDialogTitle>Anda yakin ingin menimpa data historis?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Tindakan ini akan menimpa harga modal pada SEMUA transaksi sebelumnya dengan harga modal produk saat ini. Perhitungan laba juga akan diperbarui. Tindakan ini tidak dapat dibatalkan.
+                          Tindakan ini <span className="font-bold">tidak dapat dibatalkan</span>.
+                          Sistem akan mengambil harga modal <span className="font-bold">saat ini</span> dari setiap produk dan menerapkannya ke <span className="font-bold">semua transaksi penjualan sebelumnya</span>.
+                          Jika harga modal saat ini lebih tinggi dari harga jual di masa lalu, laba historis Anda akan menjadi <span className="font-bold text-destructive">negatif</span>.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel disabled={isSyncing}>Batal</AlertDialogCancel>
                         <AlertDialogAction onClick={handleSync} disabled={isSyncing}>
                             {isSyncing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {isSyncing ? "Menyinkronkan..." : "Ya, Sinkronkan"}
+                            {isSyncing ? "Menyinkronkan..." : "Ya, Saya Mengerti Risikonya"}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
