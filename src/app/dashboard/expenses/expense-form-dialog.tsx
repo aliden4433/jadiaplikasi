@@ -43,6 +43,16 @@ import type { Expense, ExpenseCategoryDoc } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/use-auth";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 
 const formSchema = z.object({
   description: z.string().min(1, "Deskripsi tidak boleh kosong."),
@@ -71,6 +81,7 @@ export function ExpenseFormDialog({ expense, children, categories, open: openPro
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const isEditMode = !!expense;
+  const isMobile = useIsMobile();
 
   const defaultCategory = categories.length > 0 ? categories[0].name : "";
 
@@ -189,6 +200,167 @@ export function ExpenseFormDialog({ expense, children, categories, open: openPro
     }
   }
 
+  const formContent = (
+      <Form {...form}>
+        <form id="expense-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Kategori</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                          <SelectTrigger>
+                              <SelectValue placeholder="Pilih kategori" />
+                          </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                          {categories.map(cat => (
+                              <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                          ))}
+                      </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Jumlah (Rp)</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="0" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Deskripsi</FormLabel>
+                <div className="relative">
+                  <FormControl>
+                    <Input 
+                      placeholder="e.g., Pembelian stok kopi" 
+                      {...field}
+                      className={cn(descriptionOptions.length > 0 && "pr-8")}
+                    />
+                  </FormControl>
+                  {descriptionOptions.length > 0 && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground"
+                        >
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {descriptionOptions.map((desc, index) => (
+                          <DropdownMenuItem 
+                            key={index}
+                            onSelect={() => form.setValue("description", desc)}
+                          >
+                            {desc}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="date"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Tanggal Pengeluaran</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "d MMMM yyyy", { locale: id })
+                        ) : (
+                          <span>Pilih tanggal</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={(date) => {
+                        if (date) {
+                          const now = new Date();
+                          date.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
+                          field.onChange(date);
+                        }
+                      }}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </form>
+      </Form>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={setOpen}>
+        {children && <DrawerTrigger asChild>{children}</DrawerTrigger>}
+        <DrawerContent>
+          <DrawerHeader className="text-left">
+            <DrawerTitle>{isEditMode ? "Edit Pengeluaran" : "Tambah Pengeluaran Baru"}</DrawerTitle>
+            <DrawerDescription>
+              {isEditMode ? "Perbarui detail pengeluaran di bawah ini." : "Isi detail untuk pengeluaran baru."}
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="px-4 overflow-y-auto">
+            {formContent}
+          </div>
+          <DrawerFooter className="pt-2">
+            <Button type="submit" form="expense-form" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isEditMode ? "Simpan Perubahan" : "Simpan Pengeluaran"}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
+              Batal
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
@@ -200,136 +372,7 @@ export function ExpenseFormDialog({ expense, children, categories, open: openPro
           </DialogDescription>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto -mx-6 px-6 py-4">
-          <Form {...form}>
-            <form id="expense-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Kategori</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                              <SelectTrigger>
-                                  <SelectValue placeholder="Pilih kategori" />
-                              </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                              {categories.map(cat => (
-                                  <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
-                              ))}
-                          </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Jumlah (Rp)</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="0" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Deskripsi</FormLabel>
-                    <div className="relative">
-                      <FormControl>
-                        <Input 
-                          placeholder="e.g., Pembelian stok kopi" 
-                          {...field}
-                          className={cn(descriptionOptions.length > 0 && "pr-8")}
-                        />
-                      </FormControl>
-                      {descriptionOptions.length > 0 && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground"
-                            >
-                              <ChevronDown className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {descriptionOptions.map((desc, index) => (
-                              <DropdownMenuItem 
-                                key={index}
-                                onSelect={() => form.setValue("description", desc)}
-                              >
-                                {desc}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Tanggal Pengeluaran</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "d MMMM yyyy", { locale: id })
-                            ) : (
-                              <span>Pilih tanggal</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={(date) => {
-                            if (date) {
-                              const now = new Date();
-                              date.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
-                              field.onChange(date);
-                            }
-                          }}
-                          disabled={(date) =>
-                            date > new Date() || date < new Date("1900-01-01")
-                          }
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </form>
-          </Form>
+          {formContent}
         </div>
         <DialogFooter className="border-t pt-4">
           <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>

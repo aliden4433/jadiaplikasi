@@ -4,6 +4,7 @@
 import { useState, useMemo, useEffect } from "react"
 import { Trash2, ShoppingCart, Loader2, Calendar as CalendarIcon, ChevronDown, PlusCircle } from "lucide-react"
 import { format } from "date-fns"
+import { motion, AnimatePresence } from "framer-motion"
 
 import { addSale } from "./sales/actions"
 import type { CartItem, Product, Sale, ExpenseCategoryDoc, GlobalSettings } from "@/lib/types"
@@ -14,13 +15,6 @@ import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Badge } from "@/components/ui/badge"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import {
   Drawer,
   DrawerContent,
@@ -260,43 +254,49 @@ export function SalesClientPage({ products, sales, categories, initialSettings }
           </div>
         ) : (
           <div className="space-y-4">
-            {cart.map((item) => (
-              <div
-                key={item.product.id}
-                className="space-y-2 border-b border-border pb-3 last:border-b-0"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-xs font-medium break-words flex-grow pr-2">{item.product.name}</p>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0 -mt-1 -mr-2" onClick={() => removeFromCart(item.product.id!)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-                <div className="flex items-end justify-between gap-4">
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={`price-${item.product.id}`} className="text-xs text-muted-foreground">Harga</Label>
-                    <Input
-                      id={`price-${item.product.id}`}
-                      type="number"
-                      value={item.price}
-                      onChange={(e) => updatePrice(item.product.id!, parseFloat(e.target.value))}
-                      className="w-24 h-8 text-xs"
-                      step="1000"
-                    />
+            <AnimatePresence>
+              {cart.map((item) => (
+                <motion.div
+                  key={item.product.id}
+                  layout
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, x: -50, transition: { duration: 0.2 } }}
+                  className="space-y-2 border-b border-border pb-3 last:border-b-0"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-xs font-medium break-words flex-grow pr-2">{item.product.name}</p>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0 -mt-1 -mr-2" onClick={() => removeFromCart(item.product.id!)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
                   </div>
-                   <div className="grid gap-1.5">
-                    <Label htmlFor={`qty-${item.product.id}`} className="text-xs text-muted-foreground">Jumlah</Label>
-                    <Input
-                      id={`qty-${item.product.id}`}
-                      type="number"
-                      value={item.quantity}
-                      onChange={(e) => updateQuantity(item.product.id!, parseInt(e.target.value))}
-                      className="w-16 h-8 text-center text-xs"
-                      min="1"
-                    />
+                  <div className="flex items-end justify-between gap-4">
+                    <div className="grid gap-1.5">
+                      <Label htmlFor={`price-${item.product.id}`} className="text-xs text-muted-foreground">Harga</Label>
+                      <Input
+                        id={`price-${item.product.id}`}
+                        type="number"
+                        value={item.price}
+                        onChange={(e) => updatePrice(item.product.id!, parseFloat(e.target.value))}
+                        className="w-24 h-8 text-xs"
+                        step="1000"
+                      />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label htmlFor={`qty-${item.product.id}`} className="text-xs text-muted-foreground">Jumlah</Label>
+                      <Input
+                        id={`qty-${item.product.id}`}
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => updateQuantity(item.product.id!, parseInt(e.target.value))}
+                        className="w-16 h-8 text-center text-xs"
+                        min="1"
+                      />
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         )}
       </div>
