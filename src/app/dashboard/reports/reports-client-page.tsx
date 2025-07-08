@@ -169,7 +169,7 @@ export function ReportsClientPage({ initialSales, products, initialExpenses }: R
             )}>
               {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(netProfit)}
             </div>
-            <p className="text-xs text-muted-foreground">Pendapatan dikurangi pengeluaran</p>
+            <p className="text-xs text-muted-foreground">Laba kotor (penjualan - HPP) dikurangi pengeluaran.</p>
           </CardContent>
         </Card>
         <Link href="/dashboard/sales-history" className="block">
