@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { BestsellersDonutChart } from "./charts"
+import { BestsellersChart } from "./charts"
 import { useAuth } from "@/hooks/use-auth"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
@@ -235,7 +235,7 @@ export function ReportsClientPage({ initialSales, products, initialExpenses }: R
         </CardHeader>
         <CardContent className="flex items-center justify-center">
           {bestsellers.length > 0 ? (
-            <BestsellersDonutChart data={bestsellers} />
+            <BestsellersChart data={bestsellers} />
           ) : (
             <div className="text-center text-muted-foreground py-10">
                 Tidak ada data penjualan untuk periode yang dipilih.
