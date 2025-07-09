@@ -24,6 +24,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#2176ff" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/logo.svg"></link>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <AuthProvider>
