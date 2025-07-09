@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
 import type { DateRange } from "react-day-picker"
 import { addDays, format } from "date-fns"
-import { Calendar as CalendarIcon, DollarSign, Package, ShoppingBag, TrendingUp, Wallet } from "lucide-react"
+import { Calendar as CalendarIcon, DollarSign, Package, ShoppingBag, TrendingUp, Wallet, FileDown } from "lucide-react"
 
 import type { Product, Sale, Expense } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -17,10 +17,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { BestsellersChart } from "./charts"
+import { BestsellersDonutChart } from "./charts"
 import { useAuth } from "@/hooks/use-auth"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { ExportSalesButton } from "../sales-history/export-sales-button"
 
 interface ReportsClientPageProps {
   initialSales: Sale[]
@@ -72,7 +73,6 @@ export function ReportsClientPage({ initialSales, products, initialExpenses }: R
     const count = filteredSales.length
     const totalExpenses = filteredExpenses.reduce((acc, expense) => acc + expense.amount, 0)
     
-    // Net Profit is calculated by subtracting total expenses from the profit made on sales.
     const netProfit = salesProfit - totalExpenses
     
     return { revenue, count, netProfit, totalExpenses }
@@ -81,7 +81,7 @@ export function ReportsClientPage({ initialSales, products, initialExpenses }: R
   const bestsellers = useMemo(() => {
     const itemCounts: { [key: string]: number } = {}
     filteredSales.forEach(sale => {
-      sale.items.forEach((item: SaleItem) => {
+      sale.items.forEach((item) => {
         if (itemCounts[item.productName]) {
           itemCounts[item.productName] += item.quantity
         } else {
@@ -91,9 +91,8 @@ export function ReportsClientPage({ initialSales, products, initialExpenses }: R
     })
 
     return Object.entries(itemCounts)
-      .map(([name, total]) => ({ name, total }))
+      .map(([name, total]) => ({ name, total, key: name.replace(/[^a-zA-Z0-9]/g, '') }))
       .sort((a, b) => b.total - a.total)
-      .slice(0, 5)
   }, [filteredSales])
 
 
@@ -173,7 +172,7 @@ export function ReportsClientPage({ initialSales, products, initialExpenses }: R
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-end">
+      <div className="flex flex-col sm:flex-row justify-end gap-2">
         <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -209,7 +208,8 @@ export function ReportsClientPage({ initialSales, products, initialExpenses }: R
                 numberOfMonths={isMobile ? 1 : 2}
               />
             </PopoverContent>
-          </Popover>
+        </Popover>
+        {userRole === 'admin' && <ExportSalesButton sales={filteredSales} expenses={filteredExpenses} />}
       </div>
 
       {isMobile ? (
@@ -233,9 +233,9 @@ export function ReportsClientPage({ initialSales, products, initialExpenses }: R
         <CardHeader>
           <CardTitle>Item Terlaris (Periode Dipilih)</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex items-center justify-center">
           {bestsellers.length > 0 ? (
-            <BestsellersChart data={bestsellers} />
+            <BestsellersDonutChart data={bestsellers} />
           ) : (
             <div className="text-center text-muted-foreground py-10">
                 Tidak ada data penjualan untuk periode yang dipilih.
