@@ -1,0 +1,10 @@
+
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "ganti.dengan.nama.paket.anda",
+    "sha256_cert_fingerprints":
+    ["GANTI:DENGAN:FINGERPRINT:KUNCI:ANDA"]
+  }
+}]
