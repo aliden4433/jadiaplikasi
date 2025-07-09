@@ -10,7 +10,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 export const metadata: Metadata = {
   title: 'Kasir Kilat',
   description: 'Aplikasi kasir POS (Point of Sale) serbaguna dari Kasir Kilat.',
-  icons: [{ rel: "icon", url: "/logo.svg" }],
+  icons: [{ rel: "icon", url: "/android-launchericon-144-144.png" }],
 };
 
 export default function RootLayout({
@@ -23,7 +23,7 @@ export default function RootLayout({
        <head>
         <meta name="theme-color" content="#2176ff" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/logo.svg"></link>
+        <link rel="apple-touch-icon" href="/android-launchericon-144-144.png"></link>
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
