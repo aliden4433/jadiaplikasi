@@ -1,16 +1,13 @@
 {
   "name": "Kasir Kilat",
   "short_name": "KasirKilat",
-  "description": "Aplikasi kasir Point of Sale (POS) yang cepat dan mudah digunakan.",
-  "id": "/",
+  "description": "Aplikasi kasir POS (Point of Sale) serbaguna dari Kasir Kilat.",
   "start_url": "/",
+  "id": "/",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#ffffff",
+  "background_color": "#020817",
   "theme_color": "#2176ff",
-  "launch_handler": {
-    "client_mode": "focus-existing"
-  },
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "/logo.svg",
