@@ -68,7 +68,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <Icons.logo className="mx-auto size-12" />
+          <img src="/android-launchericon-144-144.png" alt="App Logo" className="mx-auto size-12" />
           <CardTitle className="mt-4">Login ke Kasir Kilat</CardTitle>
           <CardDescription>Masukkan email dan kata sandi Anda untuk melanjutkan.</CardDescription>
         </CardHeader>
